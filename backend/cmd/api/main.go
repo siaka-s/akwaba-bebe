@@ -7,6 +7,7 @@ import (
 
 	"akwaba-bebe/backend/internal/database"
 	"akwaba-bebe/backend/internal/handlers"
+	"akwaba-bebe/backend/internal/middleware"
 
 	_ "github.com/lib/pq"
 )
@@ -15,34 +16,92 @@ func main() {
 	db := database.InitDB()
 	defer db.Close()
 
+	// Initialisation des Vendeurs (Handlers)
 	productHandler := &handlers.ProductHandler{DB: db}
+	authHandler := &handlers.AuthHandler{DB: db}
+	categoryHandler := &handlers.CategoryHandler{DB: db}
+	articleHandler := &handlers.ArticleHandler{DB: db}
 
-	// On enveloppe nos routes avec la fonction enableCORS
-	http.HandleFunc("/products", enableCORS(productHandler.Routes))
-	http.HandleFunc("/products/", enableCORS(productHandler.Routes))
+	// --- ROUTES PUBLIQUES ---
+	http.HandleFunc("/signup", enableCORS(authHandler.Signup))
+	http.HandleFunc("/login", enableCORS(authHandler.Login))
 
-	fmt.Println("🚀 Serveur Akwaba prêt sur http://localhost:8080")
+	// Route /articles
+
+	http.HandleFunc("/articles", enableCORS(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "GET":
+			articleHandler.GetAllArticles(w, r)
+		case "POST":
+			// Protégé par Admin
+			middleware.IsAdmin(articleHandler.CreateArticle)(w, r)
+		default:
+			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		}
+	}))
+
+	// ROUTES CATÉGORIES
+	http.HandleFunc("/categories", enableCORS(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "GET":
+			categoryHandler.GetAllCategories(w, r)
+		case "POST":
+			// Protégé par Admin
+			middleware.IsAdmin(categoryHandler.CreateCategory)(w, r)
+		default:
+			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		}
+	}))
+
+	// Route /products (Liste & Création)
+	http.HandleFunc("/products", enableCORS(func(w http.ResponseWriter, r *http.Request) {
+
+		switch r.Method {
+		case http.MethodGet:
+			// Tout le monde peut voir la liste
+			productHandler.GetAllProducts(w, r)
+		case http.MethodPost:
+			// Seul l'admin peut créer
+			middleware.IsAdmin(productHandler.CreateProduct)(w, r)
+		case http.MethodOptions:
+			// Géré par le middleware CORS, mais on peut le laisser vide ici
+			return
+		default:
+			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		}
+	}))
+
+	// Route /products/{id} (Détail, Modif, Suppr)
+	http.HandleFunc("/products/", enableCORS(func(w http.ResponseWriter, r *http.Request) {
+
+		switch r.Method {
+		case http.MethodGet:
+			productHandler.HandleByID(w, r)
+		case http.MethodPut, http.MethodDelete:
+			// On regroupe PUT et DELETE car ils ont la même protection (Admin)
+			middleware.IsAdmin(productHandler.HandleByID)(w, r)
+		case http.MethodOptions:
+			return
+		default:
+			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		}
+	}))
+
+	fmt.Println("🚀 Serveur Akwaba sécurisé prêt sur http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
-// enableCORS est un "Middleware"
+// Middleware CORS
 func enableCORS(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// auth * to l'API
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-
-		// auth (GET, POST, etc.)
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, Authorization")
 
-		// auth  JSON
-		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding")
-
-		// pré-vérification (OPTIONS), on dit OK tout de suite
-		if r.Method == "OPTIONS" {
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
 			return
 		}
-
-		// 5. Sinon, on laisse passer la requête vers le vrai code (next)
 		next(w, r)
 	}
 }
