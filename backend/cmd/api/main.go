@@ -21,10 +21,19 @@ func main() {
 	authHandler := &handlers.AuthHandler{DB: db}
 	categoryHandler := &handlers.CategoryHandler{DB: db}
 	articleHandler := &handlers.ArticleHandler{DB: db}
+	orderHandler := &handlers.OrderHandler{DB: db}
 
 	// --- ROUTES PUBLIQUES ---
 	http.HandleFunc("/signup", enableCORS(authHandler.Signup))
 	http.HandleFunc("/login", enableCORS(authHandler.Login))
+
+	http.HandleFunc("/orders", enableCORS(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "POST" {
+			orderHandler.CreateOrder(w, r)
+		} else {
+			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		}
+	}))
 
 	// Route /articles
 
