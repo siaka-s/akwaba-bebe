@@ -123,3 +123,42 @@ func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	// On renvoie l'ID créé
 	json.NewEncoder(w).Encode(map[string]interface{}{"id": id, "message": "Succès"})
 }
+
+// MODIFIER UN PRODUIT (PUT)
+func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
+	// URL: /products/update/12
+	idStr := r.URL.Path[len("/products/update/"):]
+
+	var p models.Product
+	// On s'attend à recevoir tout le JSON du produit modifié
+	if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
+		http.Error(w, "Données invalides", http.StatusBadRequest)
+		return
+	}
+
+	query := `
+		UPDATE products 
+		SET name=$1, description=$2, price=$3, stock_quantity=$4, image_url=$5, category_id=$6 
+		WHERE id=$7`
+
+	_, err := h.DB.Exec(query, p.Name, p.Description, p.Price, p.StockQuantity, p.ImageURL, p.CategoryID, idStr)
+
+	if err != nil {
+		http.Error(w, "Erreur modification SQL: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(map[string]string{"message": "Produit mis à jour"})
+}
+
+// SUPPRIMER UN PRODUIT (DELETE)
+func (h *ProductHandler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
+	// URL: /products/delete/12
+	idStr := r.URL.Path[len("/products/delete/"):]
+
+	_, err := h.DB.Exec("DELETE FROM products WHERE id = $1", idStr)
+	if err != nil {
+		http.Error(w, "Erreur suppression", http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(map[string]string{"message": "Produit supprimé"})
+}

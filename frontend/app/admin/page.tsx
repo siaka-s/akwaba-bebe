@@ -1,167 +1,132 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { CreditCard, ShoppingBag, Clock, TrendingUp, ArrowRight, Activity, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { Plus, Trash2, Edit, Loader2, AlertTriangle, Tag } from 'lucide-react'; // J'ai ajouté l'icône Tag
-
-interface Product {
-  id: number;
-  name: string;
-  price: number;
-  stock_quantity: number;
-  image_url: string;
-}
 
 export default function AdminDashboard() {
-  const router = useRouter();
-  // On initialise avec [] pour éviter le crash "map of null"
-  const [products, setProducts] = useState<Product[]>([]);
+  const [stats, setStats] = useState({
+    revenue: 0,
+    total_orders: 0,
+    pending_orders: 0
+  });
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    // 1. Vérification de sécurité Côté Client
-    const token = localStorage.getItem('token');
-    const role = localStorage.getItem('user_role');
+    // Récupération des stats depuis le backend
+    fetch('http://localhost:8080/dashboard/stats')
+      .then(res => res.json())
+      .then(data => {
+        setStats(data || { revenue: 0, total_orders: 0, pending_orders: 0 });
+      })
+      .catch(err => console.error("Erreur chargement stats:", err))
+      .finally(() => setLoading(false));
+  }, []);
 
-    if (!token || role !== 'admin') {
-      router.push('/login');
-      return;
-    }
-    
-    setIsAdmin(true);
-    fetchProducts();
-  }, [router]);
-
-  const fetchProducts = async () => {
-    try {
-      const res = await fetch('http://localhost:8080/products', {
-        cache: 'no-store'
-      });
-      const data = await res.json();
-      
-      // Sécurité : Si l'API renvoie null, on met un tableau vide
-      setProducts(data || []); 
-      
-    } catch (error) {
-      console.error(error);
-      setProducts([]); 
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDelete = async (id: number) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) return;
-
-    const token = localStorage.getItem('token');
-    try {
-      const res = await fetch(`http://localhost:8080/products/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (res.ok) {
-        setProducts(products.filter(p => p.id !== id));
-        alert('Produit supprimé !');
-      } else {
-        alert('Erreur lors de la suppression');
-      }
-    } catch (error) {
-      alert('Erreur serveur');
-    }
-  };
-
-  if (!isAdmin || loading) {
-    return <div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin h-10 w-10 text-primary-500"/></div>;
+  if (loading) {
+    return <div className="flex h-96 items-center justify-center"><Loader2 className="animate-spin h-10 w-10 text-primary-500"/></div>;
   }
 
-  // Sécurité d'affichage
-  const productList = Array.isArray(products) ? products : [];
-
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-6xl mx-auto">
+    <div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-primary-900">Tableau de Bord</h1>
+        <p className="text-gray-500 mt-1">Aperçu de l'activité de votre boutique Akwaba Bébé.</p>
+      </div>
+
+      {/* --- LES 3 CARTES STATISTIQUES --- */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         
-        {/* --- EN-TÊTE DU DASHBOARD --- */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-primary-900">Gestion des Produits</h1>
-            <p className="text-gray-500">Gérez votre catalogue Akwaba Bébé</p>
+        {/* CARTE 1 : REVENUS */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 transition-transform hover:scale-[1.02]">
+          <div className="p-4 bg-green-100 text-green-600 rounded-xl">
+            <CreditCard className="h-8 w-8" />
           </div>
-          
-          {/* ZONE DES BOUTONS D'ACTION */}
-          <div className="flex gap-3">
-            <Link 
-              href="/admin/add" 
-              className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg shadow-md hover:shadow-lg transition-all"
-            >
-              <Plus className="h-5 w-5" />
-              Ajouter un produit
-            </Link>
+          <div>
+            <p className="text-sm text-gray-500 font-medium">Chiffre d'affaires</p>
+            <h3 className="text-2xl font-bold text-gray-900">
+              {stats.revenue ? stats.revenue.toLocaleString() : 0} F
+            </h3>
           </div>
         </div>
 
-        {/* --- TABLEAU DES PRODUITS --- */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <table className="w-full text-left border-collapse">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="p-4 font-semibold text-gray-600">Produit</th>
-                <th className="p-4 font-semibold text-gray-600">Prix</th>
-                <th className="p-4 font-semibold text-gray-600">Stock</th>
-                <th className="p-4 font-semibold text-gray-600 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {productList.map((product) => (
-                <tr key={product.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="p-4 flex items-center gap-3">
-                    {/* Image Placeholder si pas d'image */}
-                    <div className="h-10 w-10 rounded-md bg-gray-200 overflow-hidden relative">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img 
-                            src={product.image_url} 
-                            alt="" 
-                            className="h-full w-full object-cover"
-                            onError={(e) => {e.currentTarget.style.display='none'}} // Cache si erreur
-                        />
-                    </div>
-                    <span className="font-medium text-gray-800">{product.name}</span>
-                  </td>
-                  <td className="p-4 text-primary-600 font-bold">{product.price.toLocaleString()} FCFA</td>
-                  <td className="p-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${product.stock_quantity > 5 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                      {product.stock_quantity} en stock
-                    </span>
-                  </td>
-                  <td className="p-4 text-right space-x-2">
-                    <button className="text-blue-500 hover:bg-blue-50 p-2 rounded-full transition-colors" title="Modifier (Bientôt)">
-                      <Edit className="h-4 w-4" />
-                    </button>
-                    <button 
-                      onClick={() => handleDelete(product.id)}
-                      className="text-red-500 hover:bg-red-50 p-2 rounded-full transition-colors"
-                      title="Supprimer"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          
-          {productList.length === 0 && (
-            <div className="p-10 text-center text-gray-500 flex flex-col items-center">
-              <AlertTriangle className="h-10 w-10 text-yellow-400 mb-2"/>
-              <p>Aucun produit trouvé.</p>
-              <p className="text-sm mt-1">Commencez par ajouter une catégorie, puis un produit !</p>
+        {/* CARTE 2 : TOTAL COMMANDES */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 transition-transform hover:scale-[1.02]">
+          <div className="p-4 bg-blue-100 text-blue-600 rounded-xl">
+            <ShoppingBag className="h-8 w-8" />
+          </div>
+          <div>
+            <p className="text-sm text-gray-500 font-medium">Total Commandes</p>
+            <h3 className="text-2xl font-bold text-gray-900">{stats.total_orders}</h3>
+          </div>
+        </div>
+
+        {/* CARTE 3 : EN ATTENTE */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 transition-transform hover:scale-[1.02]">
+          <div className="p-4 bg-yellow-100 text-yellow-600 rounded-xl relative">
+            <Clock className="h-8 w-8" />
+            {stats.pending_orders > 0 && (
+                <span className="absolute top-2 right-2 h-3 w-3 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
+            )}
+          </div>
+          <div>
+            <p className="text-sm text-gray-500 font-medium">À traiter</p>
+            <h3 className="text-2xl font-bold text-gray-900">{stats.pending_orders}</h3>
+          </div>
+        </div>
+      </div>
+
+      {/* --- SECTION ACTIONS RAPIDES --- */}
+      <div className="grid md:grid-cols-2 gap-6">
+        
+        {/* Panneau de gauche : État des commandes */}
+        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+            <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-primary-500"/> État des commandes
+            </h3>
+            
+            {stats.pending_orders > 0 ? (
+                <div className="bg-yellow-50 border border-yellow-100 rounded-xl p-4 mb-6">
+                    <p className="text-yellow-800 font-medium">
+                        ⚠️ Vous avez <strong>{stats.pending_orders} commande(s)</strong> en attente de traitement.
+                    </p>
+                </div>
+            ) : (
+                <div className="bg-green-50 border border-green-100 rounded-xl p-4 mb-6">
+                    <p className="text-green-800 font-medium">
+                        ✅ Tout est calme. Aucune commande en attente.
+                    </p>
+                </div>
+            )}
+
+            <Link 
+                href="/admin/orders" 
+                className="inline-flex items-center justify-center w-full md:w-auto px-6 py-3 bg-white border border-gray-300 rounded-xl text-gray-700 font-bold hover:bg-gray-50 hover:border-gray-400 transition-all"
+            >
+                Gérer les commandes <ArrowRight className="h-4 w-4 ml-2"/>
+            </Link>
+        </div>
+
+        {/* Panneau de droite : Raccourcis */}
+        <div className="bg-gradient-to-br from-primary-600 to-primary-800 p-8 rounded-2xl shadow-lg text-white flex flex-col justify-between">
+            <div>
+                <div className="flex items-center gap-2 mb-2 opacity-80">
+                    <Activity className="h-5 w-5" />
+                    <span className="text-sm font-bold uppercase tracking-wider">Statut du système</span>
+                </div>
+                <h3 className="font-bold text-2xl mb-2">Boutique en ligne</h3>
+                <p className="opacity-90">Votre catalogue est actif et visible par les clients.</p>
             </div>
-          )}
+            
+            <div className="mt-8">
+                <Link 
+                    href="/" 
+                    target="_blank" 
+                    className="inline-block bg-white text-primary-700 px-6 py-3 rounded-xl font-bold text-sm hover:bg-gray-100 transition-colors shadow-sm"
+                >
+                    Voir le site client
+                </Link>
+            </div>
         </div>
 
       </div>

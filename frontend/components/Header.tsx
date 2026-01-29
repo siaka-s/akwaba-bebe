@@ -5,7 +5,7 @@ import { ShoppingCart, User, Menu, LogOut, LayoutDashboard } from 'lucide-react'
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { Logo } from './Logo';
-import { useCart } from '@/context/CartContext'; // <--- C'est lui qui fait le lien !
+import { useCart } from '@/context/CartContext';
 
 export default function Header() {
   const router = useRouter();
@@ -20,16 +20,19 @@ export default function Header() {
   const [userName, setUserName] = useState('');
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const role = localStorage.getItem('user_role');
-    const name = localStorage.getItem('user_name');
+    // Vérification côté client uniquement pour éviter les erreurs d'hydratation
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('token');
+      const role = localStorage.getItem('user_role');
+      const name = localStorage.getItem('user_name');
 
-    if (token) {
-      setIsLoggedIn(true);
-      if (role === 'admin') setIsAdmin(true);
-      if (name) setUserName(name);
+      if (token) {
+        setIsLoggedIn(true);
+        if (role === 'admin') setIsAdmin(true);
+        if (name) setUserName(name);
+      }
     }
-  }, []);
+  }, [pathname]); // On ré-écoute pathname pour mettre à jour si on change de page
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -51,10 +54,10 @@ export default function Header() {
           {/* Navigation standard */}
           {!isAdminPage && (
             <nav className="hidden md:flex space-x-8">
-              <Link href="/produits" className="text-gray-600 hover:text-primary-600 font-medium">Produits</Link>
-              <Link href="/notre-histoire" className="text-gray-600 hover:text-primary-600 font-medium">Notre histoire</Link>
-              <Link href="/astuces" className="text-gray-600 hover:text-primary-600 font-medium">Astuces</Link>
-              <Link href="/contact" className="text-gray-600 hover:text-primary-600 font-medium">Contact</Link>
+              <Link href="/produits" className="text-gray-600 hover:text-primary-600 font-medium transition-colors">Produits</Link>
+              <Link href="/notre-histoire" className="text-gray-600 hover:text-primary-600 font-medium transition-colors">Notre histoire</Link>
+              <Link href="/astuces" className="text-gray-600 hover:text-primary-600 font-medium transition-colors">Astuces</Link>
+              <Link href="/contact" className="text-gray-600 hover:text-primary-600 font-medium transition-colors">Contact</Link>
             </nav>
           )}
 
@@ -96,17 +99,24 @@ export default function Header() {
                     </Link>
                   )}
                   <div className="flex items-center gap-2 text-primary-900 font-medium">
-                     <User className="h-5 w-5" />
+                     <div className="bg-primary-50 p-1 rounded-full">
+                        <User className="h-4 w-4 text-primary-600" />
+                     </div>
                      <span>{userName}</span>
                   </div>
-                  <button onClick={handleLogout} className="ml-2 text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-full transition-colors">
+                  <button onClick={handleLogout} className="ml-2 text-gray-400 hover:text-red-500 p-2 hover:bg-red-50 rounded-full transition-colors" title="Se déconnecter">
                     <LogOut className="h-5 w-5" />
                   </button>
                 </>
               ) : (
                 <>
-                  <Link href="/login" className="text-sm font-medium text-primary-700 hover:text-primary-900 px-3 py-2 transition-colors">Connexion</Link>
-                  <Link href="/signup" className="bg-primary-500 hover:bg-primary-600 text-white px-5 py-2 rounded-full text-sm font-medium shadow-md">Inscription</Link>
+                  <Link 
+                    href="/login" 
+                    className="flex items-center gap-2 bg-white text-primary-600 border border-primary-600 px-5 py-2 rounded-full text-sm font-bold hover:bg-primary-50 transition-all shadow-sm"
+                  >
+                    <User className="h-5 w-5" />
+                    <span>Connexion</span>
+                  </Link>
                 </>
               )}
             </div>

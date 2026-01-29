@@ -27,9 +27,33 @@ func main() {
 	http.HandleFunc("/signup", enableCORS(authHandler.Signup))
 	http.HandleFunc("/login", enableCORS(authHandler.Login))
 
+	// --- ROUTE COMMANDES ---
 	http.HandleFunc("/orders", enableCORS(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "POST" {
+		switch r.Method {
+		case "POST":
+			// Public : Créer une commande
 			orderHandler.CreateOrder(w, r)
+		case "GET":
+			// Admin : Voir les commandes (Idéalement à protéger avec middleware.IsAdmin)
+			orderHandler.GetAllOrders(w, r)
+		default:
+			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		}
+	}))
+
+	http.HandleFunc("/orders/update/", enableCORS(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "POST" {
+			// Admin seulement
+			middleware.IsAdmin(orderHandler.UpdateOrderStatus)(w, r)
+		} else {
+			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		}
+	}))
+
+	// ROUTE DÉTAIL COMMANDE (/orders/123)
+	http.HandleFunc("/orders/", enableCORS(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "GET" {
+			orderHandler.GetOrderDetails(w, r)
 		} else {
 			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
 		}
@@ -51,14 +75,26 @@ func main() {
 
 	// ROUTES CATÉGORIES
 	http.HandleFunc("/categories", enableCORS(func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case "GET":
-			categoryHandler.GetAllCategories(w, r)
-		case "POST":
+		if r.Method == "GET" {
+			categoryHandler.GetCategories(w, r)
+		} else if r.Method == "POST" {
 			// Protégé par Admin
 			middleware.IsAdmin(categoryHandler.CreateCategory)(w, r)
-		default:
-			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+			categoryHandler.CreateCategory(w, r)
+		}
+	}))
+
+	// Modification
+	http.HandleFunc("/categories/update/", enableCORS(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "PUT" {
+			categoryHandler.UpdateCategory(w, r)
+		}
+	}))
+
+	// Suppression
+	http.HandleFunc("/categories/delete/", enableCORS(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "DELETE" {
+			categoryHandler.DeleteCategory(w, r)
 		}
 	}))
 
@@ -95,6 +131,19 @@ func main() {
 			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
 		}
 	}))
+
+	// http.HandleFunc("/products/update/", enableCORS(func(w http.ResponseWriter, r *http.Request) {
+	// 	if r.Method == "PUT" {
+	// 		productHandler.UpdateProduct(w, r)
+	// 	}
+	// }))
+
+	// // Suppression
+	// http.HandleFunc("/products/delete/", enableCORS(func(w http.ResponseWriter, r *http.Request) {
+	// 	if r.Method == "DELETE" {
+	// 		productHandler.DeleteProduct(w, r)
+	// 	}
+	// }))
 
 	fmt.Println("🚀 Serveur Akwaba sécurisé prêt sur http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))

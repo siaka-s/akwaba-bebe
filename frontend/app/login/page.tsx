@@ -1,9 +1,9 @@
-'use client'; // Indispensable car on utilise des formulaires interactifs
+'use client';
 
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Heart, Mail, Lock, Loader2 } from 'lucide-react';
+import { Heart, Mail, Lock, Loader2, ArrowLeft } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -30,94 +30,120 @@ export default function LoginPage() {
         throw new Error(data.message || 'Erreur de connexion');
       }
 
-      // SUCCÈS : On stocke le token dans le navigateur (LocalStorage)
+      // SUCCÈS : Stockage des infos
       localStorage.setItem('token', data.token);
       localStorage.setItem('user_role', data.role);
       localStorage.setItem('user_name', data.full_name);
 
-      // On redirige vers l'accueil (ou le dashboard si c'est un admin)
-      alert('Connexion réussie ! Bienvenue ' + data.full_name);
-      router.push('/');
-      
-      // Force un rafraîchissement pour mettre à jour le Header
+      // Force un rafraîchissement pour mettre à jour le Header immédiatement
       window.location.href = '/'; 
 
     } catch (err: any) {
       setError(err.message);
-    } finally {
-      setLoading(false);
+      setLoading(false); // Stop loading seulement si erreur (si succès, on redirige)
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg border border-primary-100">
+    <div className="min-h-screen bg-primary-50/30 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative">
+      
+      {/* --- 1. BOUTON RETOUR À L'ACCUEIL --- */}
+      <Link 
+        href="/" 
+        className="absolute top-8 left-8 flex items-center text-gray-500 hover:text-primary-600 transition-colors font-medium"
+      >
+        <ArrowLeft className="h-5 w-5 mr-2" />
+        Retour à l'accueil
+      </Link>
+
+      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
         
-        {/* En-tête */}
-        <div className="text-center">
-          <div className="mx-auto h-12 w-12 bg-gradient-akwaba rounded-full flex items-center justify-center shadow-md">
-            <Heart className="h-6 w-6 text-white fill-white" />
-          </div>
-          <h2 className="mt-6 text-3xl font-extrabold text-primary-900">
-            Bon retour parmi nous
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Connectez-vous pour accéder à votre espace
-          </p>
-        </div>
-
-        {/* Formulaire */}
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm text-center border border-red-100">
-              {error}
+        <div className="p-8">
+          {/* En-tête Carte */}
+          <div className="text-center mb-8">
+            <div className="mx-auto h-12 w-12 bg-primary-100 rounded-full flex items-center justify-center shadow-inner mb-4">
+              <Heart className="h-6 w-6 text-primary-600 fill-primary-600" />
             </div>
-          )}
-
-          <div className="rounded-md shadow-sm space-y-4">
-            <div className="relative">
-              <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-              <input
-                type="email"
-                required
-                className="appearance-none rounded-lg relative block w-full pl-10 px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm transition-colors"
-                placeholder="Adresse email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div className="relative">
-              <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-              <input
-                type="password"
-                required
-                className="appearance-none rounded-lg relative block w-full pl-10 px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm transition-colors"
-                placeholder="Mot de passe"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
+            <h2 className="text-2xl font-bold text-gray-900">
+              Bon retour parmi nous
+            </h2>
+            <p className="mt-2 text-sm text-gray-500">
+              Accédez à votre espace Akwaba Bébé
+            </p>
           </div>
 
-          <div>
+          {/* Formulaire */}
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            {error && (
+              <div className="bg-red-50 text-red-600 p-4 rounded-xl text-sm text-center border border-red-100 flex items-center justify-center animate-in fade-in slide-in-from-top-2">
+                {error}
+              </div>
+            )}
+
+            <div className="space-y-4">
+              {/* Champ Email */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Adresse Email</label>
+                <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Mail className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                        type="email"
+                        required
+                        className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-all"
+                        placeholder="exemple@email.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                    />
+                </div>
+              </div>
+
+              {/* Champ Mot de passe */}
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                    <label className="block text-sm font-medium text-gray-700">Mot de passe</label>
+                    <Link href="#" className="text-xs font-medium text-primary-600 hover:text-primary-500">
+                        Mot de passe oublié ?
+                    </Link>
+                </div>
+                <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Lock className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                        type="password"
+                        required
+                        className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-all"
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                    />
+                </div>
+              </div>
+            </div>
+
+            {/* Bouton Connexion */}
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all shadow-md hover:shadow-lg disabled:opacity-50"
+              className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {loading ? <Loader2 className="animate-spin h-5 w-5" /> : 'Se connecter'}
             </button>
-          </div>
-        </form>
+          </form>
+        </div>
 
-        <div className="text-center mt-4">
+        {/* Pied de carte (Inscription) */}
+        <div className="bg-gray-50 px-8 py-6 border-t border-gray-100 text-center">
           <p className="text-sm text-gray-600">
             Pas encore de compte ?{' '}
-            <Link href="/signup" className="font-medium text-secondary-600 hover:text-secondary-500 underline decoration-2 underline-offset-2">
-              Créer un compte
+            <Link href="/signup" className="font-bold text-primary-700 hover:text-primary-800 transition-colors">
+              Créer un compte gratuit
             </Link>
           </p>
         </div>
+
       </div>
     </div>
   );

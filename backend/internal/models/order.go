@@ -1,15 +1,28 @@
 package models
 
 type OrderRequest struct {
-	CustomerName    string     `json:"customer_name"`
-	CustomerEmail   string     `json:"customer_email"`
-	CustomerPhone   string     `json:"customer_phone"`
-	CustomerAddress string     `json:"customer_address"`
-	Items           []CartItem `json:"items"` // La liste du panier
-	Total           float64    `json:"total"`
+	// Infos Client
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Email     string `json:"email"`
+	Phone     string `json:"phone"`
+
+	// Livraison
+	DeliveryMethod  string `json:"delivery_method"` // "pickup" ou "shipping"
+	ShippingCity    string `json:"shipping_city"`
+	ShippingCommune string `json:"shipping_commune"`
+	ShippingAddress string `json:"shipping_address"`
+
+	// Options
+	CreateAccount bool   `json:"create_account"`
+	Password      string `json:"password"` // on ne le stocke pas dans la table commande (logique utilisateur à part)
+	OrderNote     string `json:"order_note"`
+
+	// Panier
+	Items []CartItem `json:"items"`
+	Total float64    `json:"total"`
 }
 
-// Un article du panier reçu
 type CartItem struct {
 	ID       int     `json:"id"`
 	Quantity int     `json:"quantity"`

@@ -100,9 +100,11 @@ export default function CartPage() {
                 <span className="text-2xl font-bold text-primary-600">{cartTotal.toLocaleString()} FCFA</span>
               </div>
 
-              <button className="w-full bg-primary-600 text-white py-4 rounded-xl font-bold hover:bg-primary-700 transition-all shadow-lg shadow-primary-200 flex items-center justify-center gap-2">
-                Passer la commande <ArrowRight className="h-5 w-5" />
-              </button>
+              <Link href="/checkout" className="block w-full">
+                <button className="w-full bg-primary-600 text-white py-4 rounded-xl font-bold hover:bg-primary-700 transition-all shadow-lg shadow-primary-200 flex items-center justify-center gap-2">
+                  Passer la commande <ArrowRight className="h-5 w-5" />
+                </button>
+              </Link>
               
               <div className="mt-4 text-center">
                 <p className="text-xs text-gray-400">Paiement à la livraison ou Mobile Money</p>
