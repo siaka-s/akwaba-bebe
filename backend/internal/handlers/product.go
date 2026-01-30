@@ -14,12 +14,11 @@ type ProductHandler struct {
 	DB *sql.DB
 }
 
-// --- 1. RECUPERER TOUS LES PRODUITS ---
+// --- 1. RÉCUPÉRER TOUS LES PRODUITS (GET /products) ---
 func (h *ProductHandler) GetAllProducts(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// On sélectionne aussi description et category_id
-	rows, err := h.DB.Query("SELECT id, name, description, price, stock_quantity, image_url, category_id FROM products")
+	rows, err := h.DB.Query("SELECT id, name, description, price, stock_quantity, image_url, category_id FROM products ORDER BY id ASC")
 	if err != nil {
 		http.Error(w, "Erreur serveur BDD", http.StatusInternalServerError)
 		return
@@ -29,15 +28,12 @@ func (h *ProductHandler) GetAllProducts(w http.ResponseWriter, r *http.Request) 
 	var products []models.Product
 	for rows.Next() {
 		var p models.Product
-		// L'ordre du Scan doit correspondre à l'ordre du SELECT
-		// On utilise sql.NullString pour description/image au cas où c'est vide, mais ici on fait simple
 		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.StockQuantity, &p.ImageURL, &p.CategoryID); err != nil {
 			continue
 		}
 		products = append(products, p)
 	}
 
-	// Si vide, on renvoie un tableau vide [] et pas null
 	if products == nil {
 		products = []models.Product{}
 	}
@@ -45,11 +41,12 @@ func (h *ProductHandler) GetAllProducts(w http.ResponseWriter, r *http.Request) 
 	json.NewEncoder(w).Encode(products)
 }
 
-// --- 2. GÉRER UN PRODUIT PAR ID (GET, PUT, DELETE) ---
-func (h *ProductHandler) HandleByID(w http.ResponseWriter, r *http.Request) {
+// --- 2. RÉCUPÉRER UN SEUL PRODUIT (GET /products/{id}) ---
+// C'est cette fonction qui manquait pour la page "Modifier"
+func (h *ProductHandler) GetProduct(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// Extraction de l'ID de l'URL (ex: /products/12)
+	// Extraction propre de l'ID : on enlève "/products/"
 	idStr := strings.TrimPrefix(r.URL.Path, "/products/")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -57,45 +54,24 @@ func (h *ProductHandler) HandleByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	switch r.Method {
-	case "GET":
-		h.getProduct(w, id)
-	case "DELETE":
-		h.deleteProduct(w, id)
-	case "PUT":
-		// Optionnel : Mise à jour du produit (à faire plus tard)
-	default:
-		http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
-	}
-}
-
-func (h *ProductHandler) getProduct(w http.ResponseWriter, id int) {
 	var p models.Product
 	sqlStatement := `SELECT id, name, description, price, stock_quantity, image_url, category_id FROM products WHERE id=$1`
+
 	row := h.DB.QueryRow(sqlStatement, id)
-	err := row.Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.StockQuantity, &p.ImageURL, &p.CategoryID)
+	err = row.Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.StockQuantity, &p.ImageURL, &p.CategoryID)
 
 	if err == sql.ErrNoRows {
-		http.Error(w, "Produit non trouvé", http.StatusNotFound)
+		http.Error(w, "Produit introuvable", http.StatusNotFound)
 		return
 	} else if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	json.NewEncoder(w).Encode(p)
 }
 
-func (h *ProductHandler) deleteProduct(w http.ResponseWriter, id int) {
-	_, err := h.DB.Exec("DELETE FROM products WHERE id=$1", id)
-	if err != nil {
-		http.Error(w, "Erreur suppression", http.StatusInternalServerError)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message": "Produit supprimé"}`))
-}
-
-// --- 3. CRÉER UN PRODUIT (POST) ---
+// --- 3. CRÉER UN PRODUIT (POST /products) ---
 func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	var p models.Product
@@ -105,7 +81,6 @@ func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// SQL Mis à jour avec Description et CategoryID
 	sqlStatement := `
 		INSERT INTO products (name, description, price, stock_quantity, image_url, category_id)
 		VALUES ($1, $2, $3, $4, $5, $6)
@@ -114,23 +89,27 @@ func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	id := 0
 	err := h.DB.QueryRow(sqlStatement, p.Name, p.Description, p.Price, p.StockQuantity, p.ImageURL, p.CategoryID).Scan(&id)
 	if err != nil {
-		// C'est ici qu'on verra l'erreur dans le terminal si ça plante
 		http.Error(w, "Erreur insertion BDD: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	// On renvoie l'ID créé
 	json.NewEncoder(w).Encode(map[string]interface{}{"id": id, "message": "Succès"})
 }
 
-// MODIFIER UN PRODUIT (PUT)
+// --- 4. MODIFIER UN PRODUIT (PUT /products/{id}) ---
 func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
-	// URL: /products/update/12
-	idStr := r.URL.Path[len("/products/update/"):]
+	w.Header().Set("Content-Type", "application/json")
+
+	// Extraction propre de l'ID : on enlève "/products/"
+	idStr := strings.TrimPrefix(r.URL.Path, "/products/")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "ID invalide", http.StatusBadRequest)
+		return
+	}
 
 	var p models.Product
-	// On s'attend à recevoir tout le JSON du produit modifié
 	if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
 		http.Error(w, "Données invalides", http.StatusBadRequest)
 		return
@@ -141,24 +120,44 @@ func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		SET name=$1, description=$2, price=$3, stock_quantity=$4, image_url=$5, category_id=$6 
 		WHERE id=$7`
 
-	_, err := h.DB.Exec(query, p.Name, p.Description, p.Price, p.StockQuantity, p.ImageURL, p.CategoryID, idStr)
-
+	res, err := h.DB.Exec(query, p.Name, p.Description, p.Price, p.StockQuantity, p.ImageURL, p.CategoryID, id)
 	if err != nil {
 		http.Error(w, "Erreur modification SQL: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-	json.NewEncoder(w).Encode(map[string]string{"message": "Produit mis à jour"})
-}
 
-// SUPPRIMER UN PRODUIT (DELETE)
-func (h *ProductHandler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
-	// URL: /products/delete/12
-	idStr := r.URL.Path[len("/products/delete/"):]
-
-	_, err := h.DB.Exec("DELETE FROM products WHERE id = $1", idStr)
-	if err != nil {
-		http.Error(w, "Erreur suppression", http.StatusInternalServerError)
+	rowsAffected, _ := res.RowsAffected()
+	if rowsAffected == 0 {
+		http.Error(w, "Aucun produit trouvé avec cet ID", http.StatusNotFound)
 		return
 	}
+
+	json.NewEncoder(w).Encode(map[string]string{"message": "Produit mis à jour avec succès"})
+}
+
+// --- 5. SUPPRIMER UN PRODUIT (DELETE /products/{id}) ---
+func (h *ProductHandler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	// Extraction propre de l'ID (Si l'URL contient encore "delete", on gère les deux cas par sécurité)
+	// Mais avec le nouveau main.go, ce sera juste /products/123
+	path := r.URL.Path
+	if strings.Contains(path, "/delete/") {
+		path = strings.Replace(path, "/delete", "", 1)
+	}
+
+	idStr := strings.TrimPrefix(path, "/products/")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "ID invalide", http.StatusBadRequest)
+		return
+	}
+
+	_, err = h.DB.Exec("DELETE FROM products WHERE id = $1", id)
+	if err != nil {
+		http.Error(w, "Erreur suppression BDD", http.StatusInternalServerError)
+		return
+	}
+
 	json.NewEncoder(w).Encode(map[string]string{"message": "Produit supprimé"})
 }

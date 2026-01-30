@@ -3,20 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
 import { useRouter } from 'next/navigation';
-import { MapPin, Store, Truck, User, CreditCard, Lock, Loader2 } from 'lucide-react';
-import Link from 'next/link';
+import { MapPin, Store, Truck, User, CreditCard, Lock, Loader2, CheckCircle } from 'lucide-react';
 
 export default function CheckoutPage() {
   const { items, cartTotal, clearCart } = useCart();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-
-  // Rediriger si panier vide
-  useEffect(() => {
-    if (items.length === 0) {
-      router.push('/cart');
-    }
-  }, [items, router]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // État du formulaire
   const [formData, setFormData] = useState({
@@ -32,6 +25,38 @@ export default function CheckoutPage() {
     password: '',
     orderNote: ''
   });
+
+  // 1. Initialisation : Vérifier le panier et l'utilisateur
+  useEffect(() => {
+    // Si panier vide, on dégage
+    if (items.length === 0) {
+      router.push('/cart');
+      return;
+    }
+
+    // Pré-remplissage des données si connecté
+    const token = localStorage.getItem('token');
+    const savedName = localStorage.getItem('user_name'); // Ex: "Kouassi Jean"
+    // Note : Pour l'email, il faudrait idéalement le stocker au login ou faire un appel /me
+    // Pour l'instant on fait avec ce qu'on a.
+
+    if (token && savedName) {
+      setIsLoggedIn(true);
+
+      // On tente de séparer le Nom complet (Approximatif)
+      const nameParts = savedName.split(' ');
+      const first = nameParts[0]; // Premier mot
+      const last = nameParts.slice(1).join(' '); // Le reste
+
+      setFormData(prev => ({
+        ...prev,
+        firstName: first || '',
+        lastName: last || '',
+        // createAccount est forcé à false car déjà connecté
+        createAccount: false
+      }));
+    }
+  }, [items, router]);
 
   const handleChange = (e: any) => {
     const { name, value, type, checked } = e.target;
@@ -54,7 +79,7 @@ export default function CheckoutPage() {
         shipping_city: formData.shippingCity,
         shipping_commune: formData.shippingCommune,
         shipping_address: formData.shippingAddress,
-        create_account: formData.createAccount,
+        create_account: formData.createAccount, // Sera false si connecté
         password: formData.password,
         order_note: formData.orderNote,
         items: items,
@@ -69,9 +94,9 @@ export default function CheckoutPage() {
       });
 
       if (res.ok) {
-        clearCart(); // On vide le panier
+        clearCart();
         alert("Commande validée avec succès ! Merci de votre confiance.");
-        router.push('/produits'); // Ou vers une page de succès "Merci"
+        router.push('/produits');
       } else {
         alert("Une erreur est survenue lors de la commande.");
       }
@@ -97,9 +122,17 @@ export default function CheckoutPage() {
             
             {/* 1. Informations Personnelles */}
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                <User className="h-5 w-5 text-primary-600"/> Informations
-              </h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold flex items-center gap-2">
+                    <User className="h-5 w-5 text-primary-600"/> Informations
+                </h2>
+                {isLoggedIn && (
+                    <span className="text-xs bg-primary-50 text-primary-700 px-2 py-1 rounded-full font-bold flex items-center gap-1">
+                        <CheckCircle className="h-3 w-3"/> Connecté en tant que {formData.firstName}
+                    </span>
+                )}
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
@@ -111,7 +144,7 @@ export default function CheckoutPage() {
                 </div>
                 <div className="col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                  <input required name="email" value={formData.email} onChange={handleChange} type="email" className="w-full border rounded-lg p-2.5 outline-none focus:ring-1 focus:ring-primary-500" />
+                  <input required name="email" value={formData.email} onChange={handleChange} type="email" placeholder="Pour recevoir la facture" className="w-full border rounded-lg p-2.5 outline-none focus:ring-1 focus:ring-primary-500" />
                 </div>
                 <div className="col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Téléphone (Mobile Money)</label>
@@ -119,24 +152,25 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              {/* Option Créer Compte */}
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" name="createAccount" checked={formData.createAccount} onChange={handleChange} className="w-4 h-4 text-primary-600 rounded" />
-                  <span className="text-gray-700 font-medium">Créer un compte pour suivre ma commande</span>
-                </label>
-                
-                {/* Champ mot de passe conditionnel */}
-                {formData.createAccount && (
-                  <div className="mt-3 animate-in fade-in slide-in-from-top-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Choisissez un mot de passe</label>
-                    <div className="relative">
-                        <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400"/>
-                        <input required={formData.createAccount} name="password" value={formData.password} onChange={handleChange} type="password" className="w-full border rounded-lg pl-10 p-2.5 outline-none focus:ring-1 focus:ring-primary-500" />
-                    </div>
+              {/* Option Créer Compte (Cachée si déjà connecté) */}
+              {!isLoggedIn && (
+                  <div className="mt-4 pt-4 border-t border-gray-100">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" name="createAccount" checked={formData.createAccount} onChange={handleChange} className="w-4 h-4 text-primary-600 rounded" />
+                      <span className="text-gray-700 font-medium">Créer un compte pour suivre ma commande</span>
+                    </label>
+                    
+                    {formData.createAccount && (
+                      <div className="mt-3 animate-in fade-in slide-in-from-top-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Choisissez un mot de passe</label>
+                        <div className="relative">
+                            <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400"/>
+                            <input required={formData.createAccount} name="password" value={formData.password} onChange={handleChange} type="password" className="w-full border rounded-lg pl-10 p-2.5 outline-none focus:ring-1 focus:ring-primary-500" />
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+              )}
             </div>
 
             {/* 2. Mode de Livraison */}

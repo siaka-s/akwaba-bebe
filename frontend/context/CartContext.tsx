@@ -64,7 +64,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }];
       }
     });
-    alert("Produit ajouté au panier !"); // Petit feedback simple pour l'instant
+    
+    // ❌ J'AI SUPPRIMÉ L'ALERTE ICI !
+    // C'est maintenant la page (ProductDetailPage) qui affiche le Toast.
   };
 
   const removeFromCart = (id: number) => {
