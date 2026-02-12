@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings" // <--- Ne pas oublier d'importer strings
+	"strings"
 
 	"akwaba-bebe/backend/internal/database"
 	"akwaba-bebe/backend/internal/handlers"
@@ -28,13 +28,25 @@ func main() {
 	http.HandleFunc("/signup", enableCORS(authHandler.Signup))
 	http.HandleFunc("/login", enableCORS(authHandler.Login))
 
-	// --- PRODUITS (Refactorisé) ---
+	// --- PROFIL USER
+	http.HandleFunc("/profile", enableCORS(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			// Récupérer les infos du profil
+			authHandler.GetProfile(w, r)
+		case http.MethodPut:
+			// Mettre à jour le profil
+			authHandler.UpdateProfile(w, r)
+		default:
+			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		}
+	}))
+
+	// --- PRODUITS ---
 
 	// 1. Route exacte "/products" -> Liste (GET) et Création (POST)
 	http.HandleFunc("/products", enableCORS(func(w http.ResponseWriter, r *http.Request) {
-		// Sécurité : Si l'URL est "/products/" (avec slash final) mais traitée ici par erreur
 		if r.URL.Path != "/products" {
-			// On renvoie vers le gestionnaire d'ID
 			productHandlerDispatcher(w, r, productHandler)
 			return
 		}
@@ -62,8 +74,7 @@ func main() {
 			middleware.IsAdmin(categoryHandler.CreateCategory)(w, r)
 		}
 	}))
-	// Note: Idéalement, faire pareil pour catégories (regrouper update/delete sous /categories/)
-	// Pour l'instant on garde tes anciennes routes catégories pour ne pas tout casser d'un coup
+
 	http.HandleFunc("/categories/update/", enableCORS(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "PUT" {
 			categoryHandler.UpdateCategory(w, r)
@@ -84,13 +95,30 @@ func main() {
 			orderHandler.GetAllOrders(w, r)
 		}
 	}))
+
+	// Détail commande (GET /orders/123)
 	http.HandleFunc("/orders/", enableCORS(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 			orderHandler.GetOrderDetails(w, r)
 		}
 	}))
 
-	// --- ARTICLES (BLOG) ---
+	// Mise à jour statut commande (POST /orders/update/123)
+	http.HandleFunc("/orders/update/", enableCORS(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "POST" {
+			// Idéalement à protéger par middleware.IsAdmin
+			orderHandler.UpdateOrderStatus(w, r)
+		}
+	}))
+
+	// MES COMMANDES (Client)
+	http.HandleFunc("/my-orders", enableCORS(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "GET" {
+			orderHandler.GetMyOrders(w, r)
+		}
+	}))
+
+	// ARTICLES (BLOG)
 	http.HandleFunc("/articles", enableCORS(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case "GET":
@@ -106,8 +134,6 @@ func main() {
 
 // Fonction utilitaire pour gérer les routes /products/{id}
 func productHandlerDispatcher(w http.ResponseWriter, r *http.Request, h *handlers.ProductHandler) {
-	// Ici l'URL est par exemple "/products/15"
-	// On vérifie qu'il y a bien un ID
 	id := strings.TrimPrefix(r.URL.Path, "/products/")
 	if id == "" || id == "/" {
 		http.Error(w, "ID manquant", http.StatusBadRequest)
@@ -116,7 +142,6 @@ func productHandlerDispatcher(w http.ResponseWriter, r *http.Request, h *handler
 
 	switch r.Method {
 	case http.MethodGet:
-		// IMPORTANT: Tu dois avoir cette méthode dans ton handler !
 		h.GetProduct(w, r)
 	case http.MethodPut:
 		middleware.IsAdmin(h.UpdateProduct)(w, r)

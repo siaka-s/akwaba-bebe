@@ -4,18 +4,60 @@ import (
 	"akwaba-bebe/backend/internal/models"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type OrderHandler struct {
 	DB *sql.DB
 }
 
-// Structure pour recevoir le nouveau statut de commande client depuis admin
+// ⚠️ Utilise la même clé que dans auth.go (Idéalement dans une config globale)
+var jwtKeyOrder = []byte("ma_cle_secrete_akwaba_2026")
+
+// Structure pour recevoir le nouveau statut (JSON)
 type UpdateStatusRequest struct {
 	Status string `json:"status"`
 }
 
+// STRUCTURES DE RÉPONSE POUR LE FRONTEND
+
+// Pour la liste des commandes (GetAllOrders et GetMyOrders)
+type OrderSummary struct {
+	ID             int     `json:"id"`
+	CustomerName   string  `json:"customer_name"`
+	Total          float64 `json:"total"` // Le frontend attend "total"
+	Status         string  `json:"status"`
+	CreatedAt      string  `json:"created_at"`
+	DeliveryMethod string  `json:"delivery_method"`
+}
+
+// Pour le détail d'une commande (GetOrderDetails)
+type OrderDetailResponse struct {
+	ID              int                 `json:"id"`
+	CustomerName    string              `json:"customer_name"`
+	CustomerEmail   string              `json:"customer_email"`
+	CustomerPhone   string              `json:"customer_phone"`
+	Total           float64             `json:"total"`
+	Status          string              `json:"status"`
+	DeliveryMethod  string              `json:"delivery_method"`
+	CreatedAt       string              `json:"created_at"`
+	ShippingCity    string              `json:"shipping_city"`    // Utile pour l'admin
+	ShippingAddress string              `json:"shipping_address"` // Utile pour l'admin
+	Items           []OrderItemResponse `json:"items"`
+}
+
+type OrderItemResponse struct {
+	ProductName string  `json:"product_name"` // Important: correspond au frontend
+	Quantity    int     `json:"quantity"`
+	UnitPrice   float64 `json:"unit_price"` // Important: correspond au frontend
+}
+
+// CRÉER UNE COMMANDE
 func (h *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -25,24 +67,19 @@ func (h *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Démarrage Transaction
 	tx, err := h.DB.Begin()
 	if err != nil {
 		http.Error(w, "Erreur serveur", http.StatusInternalServerError)
 		return
 	}
 
-	// Insertion Commande
-	// On ne stocke pas le mot de passe ici. Si create_account est true,
-	// appeler une fonction d'inscription utilisateur ici.
-
 	queryOrder := `
-		INSERT INTO orders 
-		(customer_firstname, customer_lastname, customer_email, customer_phone, 
-		 delivery_method, shipping_city, shipping_commune, shipping_address, 
-		 order_note, create_account, total_amount)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-		RETURNING id`
+        INSERT INTO orders 
+        (customer_firstname, customer_lastname, customer_email, customer_phone, 
+         delivery_method, shipping_city, shipping_commune, shipping_address, 
+         order_note, create_account, total_amount)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        RETURNING id`
 
 	var orderID int
 	err = tx.QueryRow(queryOrder,
@@ -57,7 +94,6 @@ func (h *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Insertion Articles
 	queryItem := `INSERT INTO order_items (order_id, product_id, quantity, price) VALUES ($1, $2, $3, $4)`
 	for _, item := range req.Items {
 		_, err := tx.Exec(queryItem, orderID, item.ID, item.Quantity, item.Price)
@@ -68,7 +104,6 @@ func (h *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Validation
 	if err := tx.Commit(); err != nil {
 		http.Error(w, "Erreur validation transaction", http.StatusInternalServerError)
 		return
@@ -81,14 +116,14 @@ func (h *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// RÉCUPÉRER TOUTES LES COMMANDES (ADMIN)
 func (h *OrderHandler) GetAllOrders(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// On récupère les commandes du plus récent au plus ancien
 	query := `
-		SELECT id, customer_firstname, customer_lastname, total_amount, status, created_at, delivery_method
-		FROM orders 
-		ORDER BY created_at DESC`
+        SELECT id, customer_firstname, customer_lastname, total_amount, status, created_at, delivery_method
+        FROM orders 
+        ORDER BY created_at DESC`
 
 	rows, err := h.DB.Query(query)
 	if err != nil {
@@ -96,16 +131,6 @@ func (h *OrderHandler) GetAllOrders(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer rows.Close()
-
-	// On crée une structure simplifiée pour la liste
-	type OrderSummary struct {
-		ID             int     `json:"id"`
-		CustomerName   string  `json:"customer_name"`
-		Total          float64 `json:"total"`
-		Status         string  `json:"status"`
-		CreatedAt      string  `json:"created_at"`
-		DeliveryMethod string  `json:"delivery_method"`
-	}
 
 	var orders []OrderSummary
 	for rows.Next() {
@@ -124,108 +149,170 @@ func (h *OrderHandler) GetAllOrders(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(orders)
 }
 
+// DÉTAIL D'UNE COMMANDE (ADMIN)
 func (h *OrderHandler) GetOrderDetails(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// 1. Extraire l'ID de l'URL (ex: /orders/5 -> 5)
-	idStr := r.URL.Path[len("/orders/"):]
-
-	// 2. Récupérer les infos de la commande
-	queryOrder := `
-		SELECT id, customer_firstname, customer_lastname, customer_email, customer_phone,
-		       delivery_method, shipping_city, shipping_commune, shipping_address,
-		       order_note, total_amount, status, created_at
-		FROM orders WHERE id = $1`
-
-	var o models.OrderRequest // On réutilise la structure existante
-	var id int
-	var status, createdAt string
-
-	err := h.DB.QueryRow(queryOrder, idStr).Scan(
-		&id, &o.FirstName, &o.LastName, &o.Email, &o.Phone,
-		&o.DeliveryMethod, &o.ShippingCity, &o.ShippingCommune, &o.ShippingAddress,
-		&o.OrderNote, &o.Total, &status, &createdAt,
-	)
-
+	idStr := strings.TrimPrefix(r.URL.Path, "/orders/")
+	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "Commande introuvable", http.StatusNotFound)
+		http.Error(w, "ID invalide", http.StatusBadRequest)
 		return
 	}
 
-	// 3. Récupérer les articles (avec le nom du produit via une JOINTURE)
-	queryItems := `
-		SELECT oi.quantity, oi.price, p.name 
-		FROM order_items oi
-		JOIN products p ON oi.product_id = p.id
-		WHERE oi.order_id = $1`
+	// Info Commande
+	queryOrder := `
+        SELECT id, customer_firstname, customer_lastname, customer_email, customer_phone,
+               total_amount, status, created_at, delivery_method, shipping_city, shipping_address
+        FROM orders WHERE id = $1`
 
-	rows, err := h.DB.Query(queryItems, idStr)
+	var o OrderDetailResponse
+	var first, last string
+
+	err = h.DB.QueryRow(queryOrder, id).Scan(
+		&o.ID, &first, &last, &o.CustomerEmail, &o.CustomerPhone,
+		&o.Total, &o.Status, &o.CreatedAt, &o.DeliveryMethod, &o.ShippingCity, &o.ShippingAddress,
+	)
+
+	if err == sql.ErrNoRows {
+		http.Error(w, "Commande introuvable", http.StatusNotFound)
+		return
+	} else if err != nil {
+		http.Error(w, "Erreur lecture commande: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	o.CustomerName = first + " " + last
+
+	// Articles
+	queryItems := `
+        SELECT p.name, oi.quantity, oi.price 
+        FROM order_items oi
+        JOIN products p ON oi.product_id = p.id
+        WHERE oi.order_id = $1`
+
+	rows, err := h.DB.Query(queryItems, id)
 	if err != nil {
-		http.Error(w, "Erreur articles", http.StatusInternalServerError)
+		http.Error(w, "Erreur lecture articles", http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
 
-	// On crée une structure temporaire pour la réponse JSON complète
-	type OrderResponse struct {
-		Info  models.OrderRequest `json:"info"`
-		Items []struct {
-			Name     string  `json:"name"`
-			Quantity int     `json:"quantity"`
-			Price    float64 `json:"price"`
-		} `json:"items"`
-		Status    string `json:"status"`
-		CreatedAt string `json:"created_at"`
-		ID        int    `json:"id"`
-	}
-
-	var resp OrderResponse
-	resp.ID = id
-	resp.Info = o
-	resp.Status = status
-	resp.CreatedAt = createdAt
-
+	var items []OrderItemResponse
 	for rows.Next() {
-		var name string
-		var qty int
-		var price float64
-		if err := rows.Scan(&qty, &price, &name); err == nil {
-			resp.Items = append(resp.Items, struct {
-				Name     string  `json:"name"`
-				Quantity int     `json:"quantity"`
-				Price    float64 `json:"price"`
-			}{Name: name, Quantity: qty, Price: price})
+		var item OrderItemResponse
+		if err := rows.Scan(&item.ProductName, &item.Quantity, &item.UnitPrice); err == nil {
+			items = append(items, item)
 		}
 	}
 
-	json.NewEncoder(w).Encode(resp)
+	if items == nil {
+		items = []OrderItemResponse{}
+	}
+	o.Items = items
+
+	json.NewEncoder(w).Encode(o)
 }
 
+// METTRE À JOUR LE STATUT (ADMIN)
 func (h *OrderHandler) UpdateOrderStatus(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// 1. Récupérer l'ID dans l'URL (ex: /orders/update/5)
-	// On coupe la chaîne après "/orders/update/"
-	idStr := r.URL.Path[len("/orders/update/"):]
+	idStr := strings.TrimPrefix(r.URL.Path, "/orders/update/")
 
-	// 2. Décoder le JSON reçu (ex: {"status": "livré"})
 	var req UpdateStatusRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Données invalides", http.StatusBadRequest)
 		return
 	}
 
-	// 3. Exécuter la mise à jour SQL
 	query := `UPDATE orders SET status = $1 WHERE id = $2`
 	_, err := h.DB.Exec(query, req.Status, idStr)
 
 	if err != nil {
-		http.Error(w, "Erreur lors de la mise à jour en base de données", http.StatusInternalServerError)
+		http.Error(w, "Erreur BDD", http.StatusInternalServerError)
 		return
 	}
 
-	// 4. Répondre que tout est OK
 	json.NewEncoder(w).Encode(map[string]string{
-		"message": "Statut mis à jour avec succès",
+		"message": "Statut mis à jour",
 	})
+}
+
+// MES COMMANDES (CLIENT CONNECTÉ)
+func (h *OrderHandler) GetMyOrders(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	// Extraction du Token
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Token manquant", http.StatusUnauthorized)
+		return
+	}
+	// "Bearer <token>" -> on garde juste le token
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		http.Error(w, "Token malformé", http.StatusUnauthorized)
+		return
+	}
+	tokenString := parts[1]
+
+	// Validation Token & Récupération UserID
+	claims := &jwt.MapClaims{}
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return jwtKeyOrder, nil
+	})
+
+	if err != nil || !token.Valid {
+		http.Error(w, "Token invalide", http.StatusUnauthorized)
+		return
+	}
+
+	// Récupérer l'ID utilisateur depuis le Token
+	idFloat, ok := (*claims)["user_id"].(float64)
+	if !ok {
+		http.Error(w, "ID utilisateur introuvable dans le token", http.StatusUnauthorized)
+		return
+	}
+	userID := int(idFloat)
+
+	// Récupérer l'email de l'utilisateur (car orders est lié par customer_email)
+	var userEmail string
+	err = h.DB.QueryRow("SELECT email FROM users WHERE id = $1", userID).Scan(&userEmail)
+	if err != nil {
+		// Cas rare : le user a un token mais n'est plus en BDD
+		http.Error(w, "Utilisateur introuvable", http.StatusNotFound)
+		return
+	}
+
+	// Récupérer les commandes liées à cet email
+	query := `
+        SELECT id, customer_firstname, customer_lastname, total_amount, status, created_at, delivery_method 
+        FROM orders 
+        WHERE customer_email = $1 
+        ORDER BY created_at DESC`
+
+	rows, err := h.DB.Query(query, userEmail)
+	if err != nil {
+		fmt.Println("Erreur SQL:", err) // Log pour débug
+		http.Error(w, "Erreur serveur", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var orders []OrderSummary
+	for rows.Next() {
+		var o OrderSummary
+		var first, last string
+		if err := rows.Scan(&o.ID, &first, &last, &o.Total, &o.Status, &o.CreatedAt, &o.DeliveryMethod); err != nil {
+			continue
+		}
+		o.CustomerName = first + " " + last
+		orders = append(orders, o)
+	}
+
+	if orders == nil {
+		orders = []OrderSummary{}
+	}
+
+	json.NewEncoder(w).Encode(orders)
 }
