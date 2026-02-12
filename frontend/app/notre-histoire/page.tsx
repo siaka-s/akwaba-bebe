@@ -8,14 +8,13 @@ export default function OurStoryPage() {
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-orange-50 pb-20 w-full">
       
       {/* Hero Section - Élargie */}
-      <section className="py-12 md:py-20 relative">
-        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <span className="text-secondary-500 font-extrabold tracking-widest text-sm uppercase mb-4 block">Notre Parcours</span>
+      <section className="py-8 md:py-8 relative">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-6 text-center relative z-10">
           <h1 className="text-4xl md:text-7xl font-extrabold mb-6 text-gray-900 leading-tight">
             D'une Maman <span className="text-primary-600">à Toutes les Mamans</span>
           </h1>
           <p className="text-lg md:text-xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed text-justify md:text-center">
-            Découvrez l'histoire d'Aminata Siahoué Fanny, celle qui a transformé son expérience de la maternité en une mission pour le bien-être des familles ivoiriennes.
+            Découvrez l'histoire d'Aminata Siahoué Fanny, celle qui a transformé son expérience de sa maternité en une mission pour le bien-être des familles ivoiriennes.
           </p>
         </div>
       </section>

@@ -1,134 +1,176 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { CreditCard, ShoppingBag, Clock, TrendingUp, ArrowRight, Activity, Loader2 } from 'lucide-react';
+import { 
+  CreditCard, ShoppingBag, Clock, TrendingUp, 
+  ArrowRight, Activity, Loader2, CheckCircle, 
+  ChevronRight, AlertCircle
+} from 'lucide-react';
 import Link from 'next/link';
 
+// TYPES ALIGNÉS SUR TON BACKEND (Handler Go) 
+interface Order {
+  id: number;
+  total: number;  // Changé de total_price à total 
+  status: string; 
+}
+
 export default function AdminDashboard() {
-  const [stats, setStats] = useState({
-    revenue: 0,
-    total_orders: 0,
-    pending_orders: 0
-  });
+  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
-    // Récupération des stats depuis le backend
-    fetch('http://localhost:8080/dashboard/stats')
-      .then(res => res.json())
-      .then(data => {
-        setStats(data || { revenue: 0, total_orders: 0, pending_orders: 0 });
-      })
-      .catch(err => console.error("Erreur chargement stats:", err))
-      .finally(() => setLoading(false));
+    const fetchStats = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('http://localhost:8080/orders', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!res.ok) throw new Error();
+        
+        const data = await res.json();
+        setOrders(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Erreur Dashboard:", err);
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
   }, []);
 
-  if (loading) {
-    return <div className="flex h-96 items-center justify-center"><Loader2 className="animate-spin h-10 w-10 text-primary-500"/></div>;
-  }
+  // --- LOGIQUE DE CALCUL SÉCURISÉE ---
+  
+  // 1. Chiffre d'affaires (Somme des 'total' pour les commandes dont le statut contient "livr")
+  const revenue = orders
+    .filter(o => o.status?.toLowerCase().includes('livr'))
+    .reduce((acc, curr) => acc + (Number(curr.total) || 0), 0);
+
+  // 2. Commandes à traiter (Tout ce qui n'est pas Livré ou Annulé)
+  const pendingOrdersCount = orders.filter(o => {
+    const s = o.status?.toLowerCase() || '';
+    return !s.includes('livr') && !s.includes('annul');
+  }).length;
+
+  // 3. Volume total de livraisons
+  const deliveredOrdersCount = orders.filter(o => 
+    o.status?.toLowerCase().includes('livr')
+  ).length;
+
+  if (loading) return (
+    <div className="flex h-[80vh] items-center justify-center">
+      <Loader2 className="animate-spin h-12 w-12 text-primary-600"/>
+    </div>
+  );
 
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-primary-900">Tableau de Bord</h1>
-        <p className="text-gray-500 mt-1">Aperçu de l'activité de votre boutique Akwaba Bébé.</p>
+    <div className="max-w-screen-2xl mx-auto pb-10">
+      
+      {/* --- EN-TÊTE --- */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
+        <div>
+          <h1 className="text-3xl md:text-5xl font-black text-gray-900 tracking-tight">
+            Tableau de <span className="text-secondary-500">Bord</span>
+          </h1>
+          <p className="text-gray-500 mt-2 text-lg italic tracking-tight">
+            Analyse basée sur vos {orders.length} commandes réelles.
+          </p>
+        </div>
+        {error && (
+          <div className="flex items-center gap-2 bg-red-50 text-red-700 px-4 py-2 rounded-xl border border-red-100 text-sm font-medium">
+            <AlertCircle className="h-4 w-4" /> Erreur de synchronisation avec le serveur Go
+          </div>
+        )}
       </div>
 
-      {/* --- LES 3 CARTES STATISTIQUES --- */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      {/* --- CARTES STATISTIQUES --- */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
         
-        {/* CARTE 1 : REVENUS */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 transition-transform hover:scale-[1.02]">
-          <div className="p-4 bg-green-100 text-green-600 rounded-xl">
+        <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 flex items-center gap-6 transition-all hover:shadow-md">
+          <div className="p-4 bg-primary-50 text-primary-600 rounded-2xl">
             <CreditCard className="h-8 w-8" />
           </div>
           <div>
-            <p className="text-sm text-gray-500 font-medium">Chiffre d'affaires</p>
-            <h3 className="text-2xl font-bold text-gray-900">
-              {stats.revenue ? stats.revenue.toLocaleString() : 0} F
+            <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Revenus (Livrées)</p>
+            <h3 className="text-3xl font-black text-gray-900 mt-1">
+              {revenue.toLocaleString()} <span className="text-sm font-bold">F</span>
             </h3>
           </div>
         </div>
 
-        {/* CARTE 2 : TOTAL COMMANDES */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 transition-transform hover:scale-[1.02]">
-          <div className="p-4 bg-blue-100 text-blue-600 rounded-xl">
-            <ShoppingBag className="h-8 w-8" />
+        <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 flex items-center gap-6 transition-all hover:shadow-md">
+          <div className="p-4 bg-green-50 text-green-600 rounded-2xl">
+            <CheckCircle className="h-8 w-8" />
           </div>
           <div>
-            <p className="text-sm text-gray-500 font-medium">Total Commandes</p>
-            <h3 className="text-2xl font-bold text-gray-900">{stats.total_orders}</h3>
+            <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Livrées</p>
+            <h3 className="text-3xl font-black text-gray-900 mt-1">{deliveredOrdersCount}</h3>
           </div>
         </div>
 
-        {/* CARTE 3 : EN ATTENTE */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 transition-transform hover:scale-[1.02]">
-          <div className="p-4 bg-yellow-100 text-yellow-600 rounded-xl relative">
+        <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 flex items-center gap-6 relative overflow-hidden transition-all hover:shadow-md">
+          <div className="p-4 bg-orange-50 text-secondary-500 rounded-2xl">
             <Clock className="h-8 w-8" />
-            {stats.pending_orders > 0 && (
-                <span className="absolute top-2 right-2 h-3 w-3 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
-            )}
           </div>
           <div>
-            <p className="text-sm text-gray-500 font-medium">À traiter</p>
-            <h3 className="text-2xl font-bold text-gray-900">{stats.pending_orders}</h3>
+            <p className="text-xs font-black text-gray-400 uppercase tracking-widest">À traiter</p>
+            <h3 className="text-3xl font-black text-secondary-500 mt-1">{pendingOrdersCount}</h3>
           </div>
+          {pendingOrdersCount > 0 && (
+            <div className="absolute top-0 right-0 bg-secondary-500 text-white text-[10px] font-black px-4 py-1 rounded-bl-xl uppercase tracking-tighter animate-pulse">
+              Action requise
+            </div>
+          )}
         </div>
       </div>
 
-      {/* --- SECTION ACTIONS RAPIDES --- */}
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid lg:grid-cols-3 gap-8">
         
-        {/* Panneau de gauche : État des commandes */}
-        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-            <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-primary-500"/> État des commandes
+        <div className="lg:col-span-2 bg-white p-10 rounded-[2.5rem] shadow-sm border border-gray-50">
+          <div className="flex items-center justify-between mb-10">
+            <h3 className="text-xl font-black text-gray-900 flex items-center gap-3">
+               <Activity className="h-6 w-6 text-primary-600" /> État des ventes
             </h3>
-            
-            {stats.pending_orders > 0 ? (
-                <div className="bg-yellow-50 border border-yellow-100 rounded-xl p-4 mb-6">
-                    <p className="text-yellow-800 font-medium">
-                        ⚠️ Vous avez <strong>{stats.pending_orders} commande(s)</strong> en attente de traitement.
-                    </p>
-                </div>
-            ) : (
-                <div className="bg-green-50 border border-green-100 rounded-xl p-4 mb-6">
-                    <p className="text-green-800 font-medium">
-                        ✅ Tout est calme. Aucune commande en attente.
-                    </p>
-                </div>
-            )}
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="p-6 bg-gray-50 rounded-3xl">
+                  <span className="text-xs font-bold text-gray-400 uppercase block mb-1">Panier Moyen</span>
+                  <span className="text-2xl font-black text-gray-900">
+                    {deliveredOrdersCount > 0 ? Math.round(revenue / deliveredOrdersCount).toLocaleString() : 0} F
+                  </span>
+              </div>
+              <div className="p-6 bg-gray-50 rounded-3xl">
+                  <span className="text-xs font-bold text-gray-400 uppercase block mb-1">Total Commandes</span>
+                  <span className="text-2xl font-black text-gray-900">{orders.length}</span>
+              </div>
+          </div>
+        </div>
 
-            <Link 
-                href="/admin/orders" 
-                className="inline-flex items-center justify-center w-full md:w-auto px-6 py-3 bg-white border border-gray-300 rounded-xl text-gray-700 font-bold hover:bg-gray-50 hover:border-gray-400 transition-all"
-            >
-                Gérer les commandes <ArrowRight className="h-4 w-4 ml-2"/>
+        <div className="space-y-6">
+          <div className="bg-primary-600 p-8 rounded-[2.5rem] text-white shadow-xl relative overflow-hidden group">
+            <h3 className="text-2xl font-black mb-4 relative z-10 italic uppercase tracking-tighter leading-tight">Accès <br/>Boutique</h3>
+            <Link href="/" target="_blank" className="inline-flex items-center gap-2 bg-white text-primary-600 px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-secondary-500 hover:text-white transition-all relative z-10">
+              Voir le site <ChevronRight className="h-4 w-4"/>
             </Link>
-        </div>
+          </div>
 
-        {/* Panneau de droite : Raccourcis */}
-        <div className="bg-gradient-to-br from-primary-600 to-primary-800 p-8 rounded-2xl shadow-lg text-white flex flex-col justify-between">
-            <div>
-                <div className="flex items-center gap-2 mb-2 opacity-80">
-                    <Activity className="h-5 w-5" />
-                    <span className="text-sm font-bold uppercase tracking-wider">Statut du système</span>
-                </div>
-                <h3 className="font-bold text-2xl mb-2">Boutique en ligne</h3>
-                <p className="opacity-90">Votre catalogue est actif et visible par les clients.</p>
+          <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-50">
+            <h3 className="text-lg font-black text-gray-900 mb-6 flex items-center gap-2">
+               <TrendingUp className="h-5 w-5 text-secondary-500" /> Raccourcis
+            </h3>
+            <div className="grid grid-cols-1 gap-3">
+              <Link href="/admin/orders" className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl hover:bg-primary-50 group">
+                <span className="text-sm font-bold text-gray-700">Gérer les commandes</span>
+                <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-primary-600 group-hover:translate-x-1 transition-all" />
+              </Link>
             </div>
-            
-            <div className="mt-8">
-                <Link 
-                    href="/" 
-                    target="_blank" 
-                    className="inline-block bg-white text-primary-700 px-6 py-3 rounded-xl font-bold text-sm hover:bg-gray-100 transition-colors shadow-sm"
-                >
-                    Voir le site client
-                </Link>
-            </div>
+          </div>
         </div>
-
       </div>
     </div>
   );

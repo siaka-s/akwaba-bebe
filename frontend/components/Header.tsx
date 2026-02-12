@@ -129,7 +129,7 @@ export default function Header() {
                         <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 z-50 animate-in fade-in zoom-in-95 duration-200">
                             <div className="py-2">
                                 {/* 2. CORRECTION LIEN : /profile au lieu de /profil */}
-                                <Link href="/profile" className="flex items-center px-4 py-3 hover:bg-gray-50 text-gray-700 transition-colors">
+                                <Link href="/profil" className="flex items-center px-4 py-3 hover:bg-gray-50 text-gray-700 transition-colors">
                                     <Settings className="h-4 w-4 mr-3 text-gray-400" />
                                     Mon Profil
                                 </Link>
@@ -187,7 +187,7 @@ export default function Header() {
                     <User className="h-4 w-4" />
                     {userName}
                   </div>
-                  <Link href="/profile" className="block py-2 text-gray-600 pl-6">Mon Profil</Link>
+                  <Link href="/profil" className="block py-2 text-gray-600 pl-6">Mon Profil</Link>
                   <Link href="/orders" className="block py-2 text-gray-600 pl-6">Mes Commandes</Link>
                   <button onClick={handleLogout} className="w-full text-left py-2 text-red-500 pl-6">Déconnexion</button>
                 </>

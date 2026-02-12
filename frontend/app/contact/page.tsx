@@ -5,16 +5,8 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen bg-gray-50/50 pb-20 w-full">
       
-      {/* --- EN-TÊTE LARGE --- */}
-      <section className="bg-white py-12 md:py-20 border-b border-gray-100 mb-12">
-        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <span className="text-primary-600 font-extrabold tracking-widest text-sm uppercase mb-4 block">Une question ?</span>
-          <h1 className="text-4xl md:text-7xl font-extrabold mb-6 text-secondary-500">Contactez-nous</h1>
-          <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Notre équipe dévouée est à votre écoute pour vous accompagner dans votre merveilleuse aventure de parents.
-          </p>
-        </div>
-      </section>
+      <div className="bg-white py-6 md:py-6 ">
+      </div>
 
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-5 gap-0 bg-white rounded-[2rem] shadow-sm overflow-hidden border border-gray-100">
