@@ -10,17 +10,22 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   // On cache le Header/Footer complet sur login/signup
   const hideLayoutFull = pathname === '/login' || pathname === '/signup';
   
-  // On détecte si on est sur une page Admin
+  // On détecte si on est sur une page Admin pour cacher le Footer
   const isAdminPage = pathname?.startsWith('/admin');
 
   return (
-    <>
+    <div className="flex flex-col min-h-screen w-full overflow-x-hidden">
+      
       {!hideLayoutFull && <Header />}
       
-      {children}
+      {/* AJOUT : La balise main prend toute la largeur disponible (w-full) 
+          et pousse le footer vers le bas (flex-grow) */}
+      <main className=" w-full">
+        {children}
+      </main>
       
-      {/* On cache le footer sur Login/Signup ET sur toutes les pages Admin */}
       {!hideLayoutFull && !isAdminPage && <Footer />}
-    </>
+      
+    </div>
   );
 }

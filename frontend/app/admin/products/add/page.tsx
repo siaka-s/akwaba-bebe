@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Save, ArrowLeft, Loader2, Image as ImageIcon, ChevronDown, Check, Search } from 'lucide-react';
+import { Save, ArrowLeft, Loader2, Image as ImageIcon, ChevronDown, Check, Search, Upload, X, Trash2 } from 'lucide-react';
 import Link from 'next/link';
-import toast from 'react-hot-toast'; // <--- 1. Import Toast
+import toast from 'react-hot-toast';
 
 // Interface pour le typage
 interface Category {
@@ -14,7 +14,9 @@ interface Category {
 
 export default function AddProductPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // Chargement global (sauvegarde)
+  const [uploadingImage, setUploadingImage] = useState(false); // Chargement spécifique upload image
+
   const [categories, setCategories] = useState<Category[]>([]);
 
   // --- ÉTATS POUR LA RECHERCHE CATÉGORIE ---
@@ -28,7 +30,7 @@ export default function AddProductPage() {
     description: '',
     price: '',
     stock_quantity: '',
-    image_url: '',
+    image_url: '', // On stockera l'URL S3 ici une fois l'upload fini
     category_id: ''
   });
 
@@ -66,18 +68,68 @@ export default function AddProductPage() {
     cat.name.toLowerCase().includes(categorySearch.toLowerCase())
   );
 
+  // --- NOUVELLE LOGIQUE : UPLOAD IMAGE VERS S3 ---
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Petite validation locale
+    if (file.size > 10 * 1024 * 1024) { // 10MB
+        toast.error("L'image est trop lourde (max 10MB)");
+        return;
+    }
+
+    setUploadingImage(true);
+    const uploadData = new FormData();
+    uploadData.append('file', file);
+
+    try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('http://localhost:8080/upload', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            body: uploadData // Pas de Content-Type manuel avec FormData !
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            // On met à jour le formulaire avec l'URL reçue de S3
+            setFormData(prev => ({ ...prev, image_url: data.url }));
+            toast.success("Image téléchargée !");
+        } else {
+            toast.error("Erreur lors de l'upload de l'image");
+        }
+    } catch (error) {
+        console.error("Erreur upload", error);
+        toast.error("Erreur connexion serveur");
+    } finally {
+        setUploadingImage(false);
+    }
+  };
+
+  const handleRemoveImage = () => {
+      setFormData(prev => ({ ...prev, image_url: '' }));
+  };
+
+  // --- SOUMISSION GLOBALE ---
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    // 1. Validation Catégorie
     if (!formData.category_id) {
-        toast.error("Veuillez sélectionner une catégorie valide.");
+        toast.error("Veuillez sélectionner une catégorie.");
         setLoading(false);
         return;
     }
 
-    // 2. Préparation Payload
+    if (!formData.image_url) {
+        toast.error("Veuillez ajouter une image.");
+        setLoading(false);
+        return;
+    }
+
     const payload = {
         name: formData.name,
         description: formData.description,
@@ -88,10 +140,8 @@ export default function AddProductPage() {
     };
 
     try {
-        // 3. Récupération du Token (Sécurité)
         const token = localStorage.getItem('token');
         if (!token) {
-            toast.error("Session expirée, veuillez vous reconnecter.");
             router.push('/login');
             return;
         }
@@ -100,7 +150,7 @@ export default function AddProductPage() {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}` // <--- IMPORTANT
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify(payload)
         });
@@ -112,11 +162,10 @@ export default function AddProductPage() {
             }, 1000);
         } else {
             const errorData = await res.json();
-            throw new Error(errorData.message || "Erreur lors de la création.");
+            throw new Error(errorData.message || "Erreur création.");
         }
     } catch (error: any) {
-        console.error(error);
-        toast.error(error.message || "Erreur serveur.");
+        toast.error(error.message);
     } finally {
         setLoading(false);
     }
@@ -145,12 +194,12 @@ export default function AddProductPage() {
                 placeholder="Ex: Lait Guigoz 1er âge"
                 value={formData.name} 
                 onChange={handleChange} 
-                className="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none transition-all" 
+                className="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" 
             />
         </div>
 
+        {/* Prix & Stock */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Prix */}
             <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">Prix (FCFA)</label>
                 <div className="relative">
@@ -167,8 +216,6 @@ export default function AddProductPage() {
                     <span className="absolute right-4 top-3 text-gray-400 text-sm font-bold">FCFA</span>
                 </div>
             </div>
-            
-            {/* Stock */}
             <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">Quantité en stock</label>
                 <input 
@@ -184,10 +231,9 @@ export default function AddProductPage() {
             </div>
         </div>
 
-        {/* --- SÉLECTEUR DE CATÉGORIE INTELLIGENT --- */}
+        {/* Catégorie */}
         <div ref={dropdownRef} className="relative">
             <label className="block text-sm font-bold text-gray-700 mb-2">Catégorie</label>
-            
             <div className="relative">
                 <input 
                     type="text"
@@ -209,66 +255,92 @@ export default function AddProductPage() {
             </div>
 
             {showCategoryDropdown && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-auto animate-in fade-in zoom-in-95 duration-200">
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-auto">
                     {filteredCategories.length > 0 ? (
                         <ul>
                             {filteredCategories.map(cat => (
                                 <li 
                                     key={cat.id} 
                                     onClick={() => handleSelectCategory(cat)}
-                                    className="px-4 py-3 hover:bg-primary-50 cursor-pointer flex justify-between items-center group transition-colors"
+                                    className="px-4 py-3 hover:bg-primary-50 cursor-pointer flex justify-between items-center"
                                 >
-                                    <span className="font-medium text-gray-700 group-hover:text-primary-700">{cat.name}</span>
+                                    <span>{cat.name}</span>
                                     {formData.category_id === cat.id.toString() && <Check className="h-4 w-4 text-primary-600"/>}
                                 </li>
                             ))}
                         </ul>
                     ) : (
-                        <div className="p-4 text-center text-gray-500 text-sm">
-                            Aucune catégorie trouvée pour "{categorySearch}".
-                            <br/>
-                            <Link href="/admin/categories" className="text-primary-600 font-bold hover:underline">
-                                Créer une catégorie ?
-                            </Link>
-                        </div>
+                        <div className="p-4 text-center text-gray-500 text-sm">Aucune catégorie trouvée.</div>
                     )}
                 </div>
             )}
-            <input type="hidden" name="category_id" value={formData.category_id} required />
         </div>
 
-        {/* Image */}
+        {/* --- ZONE D'UPLOAD IMAGE (MODIFIÉE) --- */}
         <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">URL de l'image</label>
-            <div className="flex gap-4 items-start">
-                <input 
-                    required 
-                    type="url" 
-                    name="image_url" 
-                    placeholder="https://..."
-                    value={formData.image_url} 
-                    onChange={handleChange} 
-                    className="flex-1 border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" 
-                />
-                <div className="h-12 w-12 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center overflow-hidden shrink-0">
-                    {formData.image_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={formData.image_url} alt="Preview" className="h-full w-full object-cover"/>
-                    ) : (
-                        <ImageIcon className="text-gray-400 h-6 w-6"/>
-                    )}
-                </div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Image du produit</label>
+            
+            <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:bg-gray-50 transition-colors bg-white">
+                {formData.image_url ? (
+                    // 1. Si une image est présente (Preview + Delete)
+                    <div className="relative inline-block group">
+                         {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img 
+                            src={formData.image_url} 
+                            alt="Aperçu" 
+                            className="h-48 w-48 object-contain rounded-lg shadow-sm bg-white p-2 border border-gray-100" 
+                        />
+                        <button 
+                            type="button"
+                            onClick={handleRemoveImage}
+                            className="absolute -top-3 -right-3 bg-red-500 text-white p-2 rounded-full shadow-lg hover:bg-red-600 transition-transform hover:scale-110"
+                            title="Supprimer l'image"
+                        >
+                            <Trash2 className="h-4 w-4"/>
+                        </button>
+                        <p className="text-xs text-green-600 font-bold mt-2 flex items-center justify-center gap-1">
+                            <Check className="h-3 w-3"/> Image enregistré
+                        </p>
+                    </div>
+                ) : (
+                    // 2. Si pas d'image (Input Upload)
+                    <>
+                        <input 
+                            type="file" 
+                            id="file-upload" 
+                            className="hidden" 
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            disabled={uploadingImage}
+                        />
+                        <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center">
+                            {uploadingImage ? (
+                                <>
+                                    <Loader2 className="h-10 w-10 text-primary-500 animate-spin mb-3" />
+                                    <span className="text-gray-500 font-medium">Enregistrement de l'image...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="bg-primary-50 p-4 rounded-full mb-3">
+                                        <Upload className="h-8 w-8 text-primary-600" />
+                                    </div>
+                                    <span className="text-gray-700 font-bold text-lg">Cliquez pour ajouter une image</span>
+                                    <span className="text-sm text-gray-400 mt-1">PNG, JPG jusqu'à 10MB</span>
+                                </>
+                            )}
+                        </label>
+                    </>
+                )}
             </div>
         </div>
 
         {/* Description */}
         <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">Description complète</label>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Description</label>
             <textarea 
                 required 
                 name="description" 
                 rows={4} 
-                placeholder="Détails du produit, composition..."
                 value={formData.description} 
                 onChange={handleChange} 
                 className="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" 
@@ -279,8 +351,8 @@ export default function AddProductPage() {
         <div className="pt-4 border-t border-gray-100 flex justify-end">
             <button 
                 type="submit" 
-                disabled={loading}
-                className="bg-primary-600 text-white px-8 py-4 rounded-xl font-bold hover:bg-primary-700 transition-all flex items-center gap-2 shadow-lg shadow-primary-200"
+                disabled={loading || uploadingImage} // Désactivé si on sauvegarde OU si on upload une image
+                className="bg-primary-600 text-white px-8 py-4 rounded-xl font-bold hover:bg-primary-700 transition-all flex items-center gap-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
                 {loading ? <Loader2 className="animate-spin h-5 w-5"/> : <Save className="h-5 w-5"/>}
                 Enregistrer le produit

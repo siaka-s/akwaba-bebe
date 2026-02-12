@@ -3,21 +3,24 @@ package handlers
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"akwaba-bebe/backend/internal/models"
+	"akwaba-bebe/backend/internal/utils"
 )
 
 type ProductHandler struct {
 	DB *sql.DB
 }
 
-// --- 1. RÉCUPÉRER TOUS LES PRODUITS (GET /products) ---
+// RÉCUPÉRER TOUS LES PRODUITS (GET /products) ---
 func (h *ProductHandler) GetAllProducts(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
+	// Sélection des champs essentiels
 	rows, err := h.DB.Query("SELECT id, name, description, price, stock_quantity, image_url, category_id FROM products ORDER BY id ASC")
 	if err != nil {
 		http.Error(w, "Erreur serveur BDD", http.StatusInternalServerError)
@@ -34,6 +37,7 @@ func (h *ProductHandler) GetAllProducts(w http.ResponseWriter, r *http.Request) 
 		products = append(products, p)
 	}
 
+	// Retourner un tableau vide [] au lieu de null si pas de produits
 	if products == nil {
 		products = []models.Product{}
 	}
@@ -41,12 +45,11 @@ func (h *ProductHandler) GetAllProducts(w http.ResponseWriter, r *http.Request) 
 	json.NewEncoder(w).Encode(products)
 }
 
-// --- 2. RÉCUPÉRER UN SEUL PRODUIT (GET /products/{id}) ---
-// C'est cette fonction qui manquait pour la page "Modifier"
+// RÉCUPÉRER UN SEUL PRODUIT (GET /products/{id})
 func (h *ProductHandler) GetProduct(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// Extraction propre de l'ID : on enlève "/products/"
+	// Extraction propre de l'ID depuis l'URL
 	idStr := strings.TrimPrefix(r.URL.Path, "/products/")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -71,7 +74,7 @@ func (h *ProductHandler) GetProduct(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(p)
 }
 
-// --- 3. CRÉER UN PRODUIT (POST /products) ---
+// CRÉER UN PRODUIT (POST /products)
 func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	var p models.Product
@@ -82,9 +85,9 @@ func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sqlStatement := `
-		INSERT INTO products (name, description, price, stock_quantity, image_url, category_id)
-		VALUES ($1, $2, $3, $4, $5, $6)
-		RETURNING id`
+        INSERT INTO products (name, description, price, stock_quantity, image_url, category_id)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING id`
 
 	id := 0
 	err := h.DB.QueryRow(sqlStatement, p.Name, p.Description, p.Price, p.StockQuantity, p.ImageURL, p.CategoryID).Scan(&id)
@@ -97,11 +100,10 @@ func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{"id": id, "message": "Succès"})
 }
 
-// --- 4. MODIFIER UN PRODUIT (PUT /products/{id}) ---
+// MODIFIER UN PRODUIT (PUT /products/{id})
 func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// Extraction propre de l'ID : on enlève "/products/"
 	idStr := strings.TrimPrefix(r.URL.Path, "/products/")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -116,9 +118,9 @@ func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	query := `
-		UPDATE products 
-		SET name=$1, description=$2, price=$3, stock_quantity=$4, image_url=$5, category_id=$6 
-		WHERE id=$7`
+        UPDATE products 
+        SET name=$1, description=$2, price=$3, stock_quantity=$4, image_url=$5, category_id=$6 
+        WHERE id=$7`
 
 	res, err := h.DB.Exec(query, p.Name, p.Description, p.Price, p.StockQuantity, p.ImageURL, p.CategoryID, id)
 	if err != nil {
@@ -135,12 +137,11 @@ func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "Produit mis à jour avec succès"})
 }
 
-// --- 5. SUPPRIMER UN PRODUIT (DELETE /products/{id}) ---
+// SUPPRIMER UN PRODUIT (DELETE /products/{id})
 func (h *ProductHandler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// Extraction propre de l'ID (Si l'URL contient encore "delete", on gère les deux cas par sécurité)
-	// Mais avec le nouveau main.go, ce sera juste /products/123
+	// Nettoyage de l'URL pour gérer d'éventuels "/delete/" résiduels
 	path := r.URL.Path
 	if strings.Contains(path, "/delete/") {
 		path = strings.Replace(path, "/delete", "", 1)
@@ -160,4 +161,33 @@ func (h *ProductHandler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(map[string]string{"message": "Produit supprimé"})
+}
+
+// UPLOAD IMAGE VERS AWS S3 (POST /upload)
+func (h *ProductHandler) UploadImage(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	// Limiter la taille du fichier (ex: 10MB)
+	r.ParseMultipartForm(10 << 20)
+
+	// Récupérer le fichier depuis le champ "file" du formulaire
+	file, handler, err := r.FormFile("file")
+	if err != nil {
+		http.Error(w, "Fichier invalide ou absent", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	// Appel au service utilitaire S3
+	url, err := utils.UploadToS3(file, handler)
+	if err != nil {
+		fmt.Println("Erreur S3:", err) // Log console serveur
+		http.Error(w, "Erreur lors de l'upload vers S3", http.StatusInternalServerError)
+		return
+	}
+
+	// Succès : renvoyer l'URL publique
+	json.NewEncoder(w).Encode(map[string]string{
+		"url": url,
+	})
 }

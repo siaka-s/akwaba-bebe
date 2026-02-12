@@ -10,42 +10,61 @@ import (
 	"akwaba-bebe/backend/internal/handlers"
 	"akwaba-bebe/backend/internal/middleware"
 
+	"github.com/joho/godotenv"
+
 	_ "github.com/lib/pq"
 )
 
 func main() {
+
+	// Charger les variables d'environnement depuis .env
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("Note: Aucun fichier .env trouvé, on utilise les variables système.")
+	}
+	// Initialisation de la Base de Données
 	db := database.InitDB()
 	defer db.Close()
 
-	// Initialisation des Handlers
+	// Initialisation des Gestionnaires (Handlers)
 	productHandler := &handlers.ProductHandler{DB: db}
 	authHandler := &handlers.AuthHandler{DB: db}
 	categoryHandler := &handlers.CategoryHandler{DB: db}
 	articleHandler := &handlers.ArticleHandler{DB: db}
 	orderHandler := &handlers.OrderHandler{DB: db}
 
-	// --- AUTH ---
+	// --- AUTHENTIFICATION ---
 	http.HandleFunc("/signup", enableCORS(authHandler.Signup))
 	http.HandleFunc("/login", enableCORS(authHandler.Login))
 
-	// --- PROFIL USER
+	// --- PROFIL UTILISATEUR ---
 	http.HandleFunc("/profile", enableCORS(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			// Récupérer les infos du profil
 			authHandler.GetProfile(w, r)
 		case http.MethodPut:
-			// Mettre à jour le profil
 			authHandler.UpdateProfile(w, r)
 		default:
 			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
 		}
 	}))
 
+	// --- UPLOAD IMAGE (NOUVEAU - AWS S3) ---
+	// Route pour uploader une image produit
+	http.HandleFunc("/upload", enableCORS(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			// Idéalement, à protéger avec middleware.IsAdmin(productHandler.UploadImage)(w, r)
+			productHandler.UploadImage(w, r)
+		} else {
+			http.Error(w, "Méthode non autorisée, utilisez POST", http.StatusMethodNotAllowed)
+		}
+	}))
+
 	// --- PRODUITS ---
 
-	// 1. Route exacte "/products" -> Liste (GET) et Création (POST)
+	// Route racine "/products" -> Liste & Création
 	http.HandleFunc("/products", enableCORS(func(w http.ResponseWriter, r *http.Request) {
+		// Sécurité : évite que "/products/quelquechose" soit traité ici par erreur
 		if r.URL.Path != "/products" {
 			productHandlerDispatcher(w, r, productHandler)
 			return
@@ -61,7 +80,7 @@ func main() {
 		}
 	}))
 
-	// 2. Route avec ID "/products/" -> Détail, Update, Delete
+	// Route dynamique "/products/{id}" -> Détail, Modif, Suppr
 	http.HandleFunc("/products/", enableCORS(func(w http.ResponseWriter, r *http.Request) {
 		productHandlerDispatcher(w, r, productHandler)
 	}))
@@ -87,6 +106,8 @@ func main() {
 	}))
 
 	// --- COMMANDES ---
+
+	// Création et Liste Admin
 	http.HandleFunc("/orders", enableCORS(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case "POST":
@@ -106,19 +127,18 @@ func main() {
 	// Mise à jour statut commande (POST /orders/update/123)
 	http.HandleFunc("/orders/update/", enableCORS(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
-			// Idéalement à protéger par middleware.IsAdmin
 			orderHandler.UpdateOrderStatus(w, r)
 		}
 	}))
 
-	// MES COMMANDES (Client)
+	// Historique Client (GET /my-orders)
 	http.HandleFunc("/my-orders", enableCORS(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 			orderHandler.GetMyOrders(w, r)
 		}
 	}))
 
-	// ARTICLES (BLOG)
+	// --- BLOG / ARTICLES ---
 	http.HandleFunc("/articles", enableCORS(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case "GET":
@@ -132,8 +152,13 @@ func main() {
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
-// Fonction utilitaire pour gérer les routes /products/{id}
+// ---------------------------------------------------------
+// UTILITAIRES
+// ---------------------------------------------------------
+
+// Dispatcher pour gérer les routes dynamiques /products/{id}
 func productHandlerDispatcher(w http.ResponseWriter, r *http.Request, h *handlers.ProductHandler) {
+	// Extraction de l'ID depuis l'URL
 	id := strings.TrimPrefix(r.URL.Path, "/products/")
 	if id == "" || id == "/" {
 		http.Error(w, "ID manquant", http.StatusBadRequest)
@@ -152,13 +177,15 @@ func productHandlerDispatcher(w http.ResponseWriter, r *http.Request, h *handler
 	}
 }
 
-// Middleware CORS
+// Middleware pour activer CORS (Cross-Origin Resource Sharing)
 func enableCORS(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// Autoriser toutes les origines (pour le dev)
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, Authorization")
 
+		// Gestion de la requête préliminaire (Preflight)
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
 			return
