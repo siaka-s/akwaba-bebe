@@ -9,7 +9,7 @@ export default function ContactPage() {
       </div>
 
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid md:grid-cols-5 gap-0 bg-white rounded-[2rem] shadow-sm overflow-hidden border border-gray-100">
+        <div className="grid md:grid-cols-5 gap-0 bg-white rounded-4xl shadow-sm overflow-hidden border border-gray-100">
           
           {/* Infos de contact (Gauche - 2 colonnes) */}
           <div className="md:col-span-2 bg-primary-600 p-10 md:p-16 text-white flex flex-col justify-between relative overflow-hidden">

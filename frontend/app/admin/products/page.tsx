@@ -56,7 +56,7 @@ export default function AdminProductsPage() {
     
     // On crée un toast personnalisé
     toast((t) => (
-      <div className="flex flex-col gap-3 min-w-[250px]">
+      <div className="flex flex-col gap-3 min-w-62.5">
         <div className="flex items-start gap-3">
             <div className="bg-red-100 p-2 rounded-full">
                 <Trash2 className="h-5 w-5 text-red-600" />

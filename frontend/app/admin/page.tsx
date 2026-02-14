@@ -45,18 +45,18 @@ export default function AdminDashboard() {
 
   // --- LOGIQUE DE CALCUL SÉCURISÉE ---
   
-  // 1. Chiffre d'affaires (Somme des 'total' pour les commandes dont le statut contient "livr")
+  // Chiffre d'affaires (Somme des 'total' pour les commandes dont le statut contient "livr")
   const revenue = orders
     .filter(o => o.status?.toLowerCase().includes('livr'))
     .reduce((acc, curr) => acc + (Number(curr.total) || 0), 0);
 
-  // 2. Commandes à traiter (Tout ce qui n'est pas Livré ou Annulé)
+  // Commandes à traiter (Tout ce qui n'est pas Livré ou Annulé)
   const pendingOrdersCount = orders.filter(o => {
     const s = o.status?.toLowerCase() || '';
     return !s.includes('livr') && !s.includes('annul');
   }).length;
 
-  // 3. Volume total de livraisons
+  // Volume total de livraisons
   const deliveredOrdersCount = orders.filter(o => 
     o.status?.toLowerCase().includes('livr')
   ).length;
@@ -90,10 +90,10 @@ export default function AdminDashboard() {
       {/* --- CARTES STATISTIQUES --- */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
         
-        <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 flex items-center gap-6 transition-all hover:shadow-md">
+        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-6 transition-all hover:shadow-md">
           <div className="p-4 bg-primary-50 text-primary-600 rounded-2xl">
             <CreditCard className="h-8 w-8" />
-          </div>
+          </div> 
           <div>
             <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Revenus (Livrées)</p>
             <h3 className="text-3xl font-black text-gray-900 mt-1">
@@ -102,7 +102,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 flex items-center gap-6 transition-all hover:shadow-md">
+        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-6 transition-all hover:shadow-md">
           <div className="p-4 bg-green-50 text-green-600 rounded-2xl">
             <CheckCircle className="h-8 w-8" />
           </div>
@@ -112,7 +112,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 flex items-center gap-6 relative overflow-hidden transition-all hover:shadow-md">
+        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-6 relative overflow-hidden transition-all hover:shadow-md">
           <div className="p-4 bg-orange-50 text-secondary-500 rounded-2xl">
             <Clock className="h-8 w-8" />
           </div>

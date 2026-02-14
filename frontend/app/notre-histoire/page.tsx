@@ -5,7 +5,7 @@ import { Heart, Star, Award } from 'lucide-react';
 export default function OurStoryPage() {
   return (
     // Utilisation de w-full pour la structure globale
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-orange-50 pb-20 w-full">
+    <div className="min-h-screen bg-linear-to-br from-primary-50 via-white to-orange-50 pb-20 w-full">
       
       {/* Hero Section - Élargie */}
       <section className="py-8 md:py-8 relative">
@@ -43,7 +43,7 @@ export default function OurStoryPage() {
             </div>
 
             <div className="md:w-1/2 flex justify-center">
-              <div className="relative w-72 h-72 md:w-[500px] md:h-[500px]">
+              <div className="relative w-72 h-72 md:w-125 md:h-112.5">
                 {/* Décoration de fond orange */}
                 <div className="absolute inset-0 bg-secondary-100 rounded-full blur-3xl opacity-40 animate-pulse"></div>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -75,7 +75,7 @@ export default function OurStoryPage() {
             </div>
 
             <div className="order-1 md:order-2">
-              <h2 className="text-3xl md:text-4xl font-bold mb-6 text-gray-900 text-secondary-500">Du rêve à la réalité</h2>
+              <h2 className="text-3xl md:text-4xl font-bold mb-6 text-secondary-500">Du rêve à la réalité</h2>
               <div className="space-y-6 text-gray-600 text-justify">
                 <p>
                   L'ouverture de la première boutique <strong>Akwaba Bébé</strong> a été un moment chargé d'émotion. Ce n'était pas seulement des rayons remplis de produits, c'était la concrétisation d'une promesse faite aux mamans ivoiriennes : celle de l'excellence.
@@ -112,14 +112,14 @@ export default function OurStoryPage() {
 
             <div className="grid md:grid-cols-2 gap-12">
                 {/* Carte 1 : TV */}
-                <div className="group relative overflow-hidden rounded-3xl shadow-lg h-[450px]">
+                <div className="group relative overflow-hidden rounded-3xl shadow-lg h-112,5">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                         src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTYzDvAqjz9C4TR-avJUw3D6F6tyhj4iS8GCQ&s"
                         alt="Aminata à la TV"
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end p-10">
+                    <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/20 to-transparent flex items-end p-10">
                         <div>
                             <div className="bg-secondary-500 text-white text-xs font-bold px-3 py-1 rounded-full mb-4 w-fit uppercase">Média</div>
                             <h3 className="text-white font-bold text-2xl md:text-3xl">Sensibilisation à la Télévision</h3>
@@ -129,14 +129,14 @@ export default function OurStoryPage() {
                 </div>
 
                 {/* Carte 2 : Social */}
-                <div className="group relative overflow-hidden rounded-3xl shadow-lg h-[450px]">
+                <div className="group relative overflow-hidden rounded-3xl shadow-lg h-112,5">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                         src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQLQSr9nRXUOHBbJVkDOvoJ0WzinlePrkQQbA&s"
                         alt="Action Sociale"
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end p-10">
+                    <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/20 to-transparent flex items-end p-10">
                         <div>
                             <div className="bg-primary-600 text-white text-xs font-bold px-3 py-1 rounded-full mb-4 w-fit uppercase">Social</div>
                             <h3 className="text-white font-bold text-2xl md:text-3xl">Au cœur des communautés</h3>
@@ -150,7 +150,7 @@ export default function OurStoryPage() {
 
       {/* Footer Vision */}
       <section className="py-24 text-center">
-        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
+        <div className="mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
           <Award className="h-16 w-16 text-secondary-500 mx-auto mb-8" />
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-8">L'aventure ne fait que commencer</h2>
           <p className="text-xl md:text-3xl text-gray-600 leading-relaxed italic font-light">

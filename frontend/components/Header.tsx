@@ -121,7 +121,7 @@ export default function Header() {
                         <div className="bg-primary-50 p-1 rounded-full">
                             <User className="h-4 w-4 text-primary-600" />
                         </div>
-                        <span className="max-w-[100px] truncate">{userName}</span>
+                        <span className="max-w-25 truncate">{userName}</span>
                         <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
                     </button>
 

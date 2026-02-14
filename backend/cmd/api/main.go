@@ -87,11 +87,14 @@ func main() {
 
 	// --- CATÉGORIES ---
 	http.HandleFunc("/categories", enableCORS(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "GET" {
+
+		switch r.Method {
+		case "POST":
 			categoryHandler.GetCategories(w, r)
-		} else if r.Method == "POST" {
+		case "GET":
 			middleware.IsAdmin(categoryHandler.CreateCategory)(w, r)
 		}
+
 	}))
 
 	http.HandleFunc("/categories/update/", enableCORS(func(w http.ResponseWriter, r *http.Request) {

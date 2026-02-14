@@ -100,7 +100,7 @@ export default function Home() {
 
             {/* BLOC 3 : IMAGES HERO */}
             <div className="flex-1 flex gap-4 justify-center md:justify-end items-center mt-6 md:mt-0">
-              <div className="relative w-32 md:w-44 aspect-[3/4] mt-8 transform -rotate-2 hover:rotate-0 transition-all duration-500">
+              <div className="relative w-32 md:w-44 aspect-3/4 mt-8 transform -rotate-2 hover:rotate-0 transition-all duration-500">
                 <img
                   src="https://akwaba-bebe-images.s3.eu-west-3.amazonaws.com/products/1770909267101251000.jpeg"
                   alt="Maman et bébé joyeux"
@@ -108,7 +108,7 @@ export default function Home() {
                 />
               </div>
 
-              <div className="relative w-32 md:w-44 aspect-[3/4] mb-8 transform rotate-2 hover:rotate-0 transition-all duration-500">
+              <div className="relative w-32 md:w-44 aspect-3/] mb-8 transform rotate-2 hover:rotate-0 transition-all duration-500">
                 <img
                   src="https://akwaba-bebe-images.s3.eu-west-3.amazonaws.com/products/1770909858258004000.jpeg"
                   alt="Bébé souriant"
@@ -119,7 +119,7 @@ export default function Home() {
           </div>
 
           {/* --- BORDURE BASSE ANIMÉE EN VERT --- */}
-          <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary-600/40 to-transparent animate-pulse" />
+          <div className="absolute bottom-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-primary-600/40 to-transparent animate-pulse" />
         </section>
       )}
 
@@ -141,7 +141,7 @@ export default function Home() {
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
               {featuredProducts.map((product) => (
                 <div key={product.id} className="group bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col h-full hover:-translate-y-1 border-none">
-                  <Link href={`/produits/${product.id}`} className="flex-grow">
+                  <Link href={`/produits/${product.id}`} className="grow">
                     <div className="relative h-44 md:h-48 bg-white flex items-center justify-center p-2 overflow-hidden">
                       <img src={product.image_url} alt={product.name} className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-500" />
                     </div>

@@ -184,7 +184,7 @@ export default function ProductsPage() {
                     key={product.id}
                     className="group bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col h-full hover:-translate-y-1 border-none"
                   >
-                    <Link href={`/produits/${product.id}`} className="flex-grow">
+                    <Link href={`/produits/${product.id}`} className="grow">
                       {/* Image : Taille réduite (h-44) */}
                       <div className="relative h-44 md:h-48 bg-white flex items-center justify-center p-2 overflow-hidden">
                         <img

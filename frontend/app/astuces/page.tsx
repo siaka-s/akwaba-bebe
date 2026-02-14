@@ -124,7 +124,7 @@ export default function BlogPage() {
       {selectedArticle && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-300">
             
-            <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col relative animate-in zoom-in-95 duration-300">
+            <div className="bg-white rounded-4xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col relative animate-in zoom-in-95 duration-300">
                 
                 {/* Bouton Fermer */}
                 <button 
@@ -137,7 +137,7 @@ export default function BlogPage() {
                 {/* Contenu Scrollable */}
                 <div className="overflow-y-auto custom-scrollbar">
                     {/* Image Modale */}
-                    <div className="h-80 md:h-[450px] w-full shrink-0">
+                    <div className="h-80 md:h-112.5 w-full shrink-0">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img 
                             src={selectedArticle.image_url} 
