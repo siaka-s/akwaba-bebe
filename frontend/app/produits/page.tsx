@@ -93,7 +93,7 @@ export default function ProductsPage() {
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
         {/* --- RECHERCHE --- */}
-        <div className="bg-gray-50 p-3 rounded-2xl mb-8 flex items-center gap-3 border border-gray-100 max-w-2xl">
+        <div className="bg-gray-50 p-1 rounded-2xl mb-8 flex items-center text-center gap-3 border border-gray-100 max-w-">
           <Search className="h-5 w-5 text-gray-400 ml-2" />
           <input
             type="text"
@@ -200,7 +200,7 @@ export default function ProductsPage() {
                         </h3>
 
                         {/* Description : Justifiée, 3 lignes max */}
-                        <p className="text-[11px] text-gray-400 mb-1 leading-tight text-justify line-clamp-3">
+                        <p className="text-[11px] text-gray-400 mb-1 leading-tight text-justify line-clamp-2">
                           {product.description || "Un indispensable pour bébé."}
                         </p>
 

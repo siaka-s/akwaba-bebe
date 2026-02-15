@@ -13,7 +13,7 @@ import {
   Heart,
   ChevronUp,
   ChevronDown,
-  Loader2
+  Loader2,
 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import toast from "react-hot-toast";
@@ -63,7 +63,6 @@ export default function Home() {
       {/* --- 1. HERO SECTION --- */}
       {showHero && (
         <section className="relative bg-primary-50 pt-8 pb-2 px-4 animate-in fade-in duration-700">
-          
           <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8 px-4 sm:px-6 relative z-10">
             {/* BLOC 1 : TITRE */}
             <div className="flex-1 flex justify-center text-center">
@@ -77,15 +76,22 @@ export default function Home() {
             {/* BLOC 2 : DÉTAILS & ACTIONS */}
             <div className="flex-1 flex flex-col items-center text-center space-y-6">
               <div className="inline-flex flex-wrap justify-center gap-3 text-xs font-bold text-secondary-500 uppercase tracking-wide bg-white/60 px-4 py-2 rounded-full border border-primary-100">
-                <span className="flex items-center gap-1"><Gift className="h-3 w-3" /> Cadeaux</span>
+                <span className="flex items-center gap-1">
+                  <Gift className="h-3 w-3" /> Cadeaux
+                </span>
                 <span className="text-gray-300">•</span>
-                <span className="flex items-center gap-1"><Baby className="h-3 w-3" /> Maternité</span>
+                <span className="flex items-center gap-1">
+                  <Baby className="h-3 w-3" /> Maternité
+                </span>
                 <span className="text-gray-300">•</span>
-                <span className="flex items-center gap-1"><Heart className="h-3 w-3" /> Soins</span>
+                <span className="flex items-center gap-1">
+                  <Heart className="h-3 w-3" /> Soins
+                </span>
               </div>
 
               <p className="text-gray-600 text-lg max-w-sm leading-relaxed">
-                Nous accompagnons vos premiers moments de bonheur en toute sérénité.
+                Nous accompagnons vos premiers moments de bonheur en toute
+                sérénité
               </p>
 
               <div>
@@ -126,24 +132,40 @@ export default function Home() {
       {/* --- 3. BLOC PRODUITS --- */}
       <section className="py-8 bg-gray-50 min-h-screen">
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6">
-          <div className="flex justify-between items-end mb-3">
-            <h2 className="text-xl md:text-2xl font-bold text-gray-900 flex items-center gap-2">
-              Nos Produits <span className="text-2xl">🧸</span>
-            </h2>
-            <Link href="/produits" className="hidden md:flex items-center text-secondary-500 font-bold hover:underline text-xs uppercase tracking-wide">
-              Tout voir <ArrowRight className="h-3 w-3 ml-1" />
+          <div className="flex items-center justify-between mb-5">
+            <Link
+              href="/produits"
+              className="hidden md:flex items-center text-primary-500 font-bold hover:underline text-xs uppercase tracking-wide"
+            >
+              Voir tout nos produits
+            </Link>
+
+            <Link
+              href="/produits"
+              className="hidden md:flex items-center text-primary-500 font-bold hover:underline text-sm uppercase tracking-wide"
+            >
+              <ArrowRight className="h-3 w-3 ml-1" />
             </Link>
           </div>
 
           {loading ? (
-            <div className="flex justify-center py-20"><Loader2 className="animate-spin h-8 w-8 text-primary-600"/></div>
+            <div className="flex justify-center py-20">
+              <Loader2 className="animate-spin h-8 w-8 text-primary-600" />
+            </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
               {featuredProducts.map((product) => (
-                <div key={product.id} className="group bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col h-full hover:-translate-y-1 border-none">
+                <div
+                  key={product.id}
+                  className="group bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col h-full hover:-translate-y-1 border-none"
+                >
                   <Link href={`/produits/${product.id}`} className="grow">
                     <div className="relative h-44 md:h-48 bg-white flex items-center justify-center p-2 overflow-hidden">
-                      <img src={product.image_url} alt={product.name} className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-500" />
+                      <img
+                        src={product.image_url}
+                        alt={product.name}
+                        className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-500"
+                      />
                     </div>
 
                     <div className="px-3 pt-1 pb-2 relative z-10 bg-white">
@@ -151,7 +173,7 @@ export default function Home() {
                         {product.name}
                       </h3>
 
-                      <p className="text-[11px] text-gray-400 mb-1 leading-tight text-justify line-clamp-3">
+                      <p className="text-[11px] text-gray-400 mb-1 leading-tight text-justify line-clamp-2">
                         {product.description || "Un indispensable pour bébé."}
                       </p>
 
@@ -164,8 +186,13 @@ export default function Home() {
                   </Link>
 
                   <div className="px-3 pb-3 mt-auto flex items-center justify-between pt-1 border-t border-gray-50 bg-white">
-                    <span className="font-bold text-gray-900 text-sm">{product.price.toLocaleString()} F</span>
-                    <button onClick={(e) => handleAddToCart(e, product)} className="bg-gray-50 p-1.5 rounded-full text-gray-400 hover:bg-primary-600 hover:text-white transition-all shadow-sm active:scale-90">
+                    <span className="font-bold text-gray-900 text-sm">
+                      {product.price.toLocaleString()} F
+                    </span>
+                    <button
+                      onClick={(e) => handleAddToCart(e, product)}
+                      className="bg-gray-50 p-1.5 rounded-full text-gray-400 hover:bg-primary-600 hover:text-white transition-all shadow-sm active:scale-90"
+                    >
                       <ShoppingCart className="h-3.5 w-3.5" />
                     </button>
                   </div>
