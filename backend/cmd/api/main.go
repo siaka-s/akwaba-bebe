@@ -152,6 +152,7 @@ func main() {
 	}))
 
 	fmt.Println("🚀 Serveur Akwaba sécurisé prêt sur http://localhost:8080")
+	fmt.Println("déploiement avec les nouveaux secrets pour actions github")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
