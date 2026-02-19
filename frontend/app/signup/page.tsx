@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Heart, User, Mail, Lock, Phone, Loader2, ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { API_URL } from '@/config';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -29,7 +30,7 @@ export default function SignupPage() {
     setError('');
 
     try {
-      const res = await fetch('http://localhost:8080/signup', {
+      const res = await fetch(`${API_URL}/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
