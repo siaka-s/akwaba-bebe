@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Save, Loader2, Tag } from 'lucide-react';
 import Link from 'next/link';
+import { API_URL } from '@/config';
 
 export default function AddCategoryPage() {
   const router = useRouter();
@@ -16,7 +17,7 @@ export default function AddCategoryPage() {
     const token = localStorage.getItem('token');
 
     try {
-      const res = await fetch('http://localhost:8080/categories', {
+      const res = await fetch(`${API_URL}/categories`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

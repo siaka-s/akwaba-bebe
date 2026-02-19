@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Plus, Trash2, Edit2, Save, X, Package, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { API_URL } from '@/config';
 
 interface Category {
   id: number;
@@ -30,8 +31,8 @@ export default function AdminCategoriesPage() {
   const fetchData = async () => {
     try {
       const [resCat, resProd] = await Promise.all([
-        fetch('http://localhost:8080/categories', { cache: 'no-store' }),
-        fetch('http://localhost:8080/products', { cache: 'no-store' })
+        fetch(`${API_URL}/categories`, { cache: 'no-store' }),
+        fetch(`${API_URL}/products`, { cache: 'no-store' })
       ]);
 
       const cats = await resCat.json();
@@ -71,7 +72,7 @@ export default function AdminCategoriesPage() {
     }
 
     try {
-        const res = await fetch('http://localhost:8080/categories', {
+        const res = await fetch(`${API_URL}/categories`, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
@@ -128,7 +129,7 @@ export default function AdminCategoriesPage() {
     if (!token) return;
 
     try {
-        const res = await fetch(`http://localhost:8080/categories/delete/${id}`, { 
+        const res = await fetch(`${API_URL}/categories/delete/${id}`, { 
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -156,7 +157,7 @@ export default function AdminCategoriesPage() {
     const token = localStorage.getItem('token');
     
     try {
-        const res = await fetch(`http://localhost:8080/categories/update/${editingId}`, {
+        const res = await fetch(`${API_URL}/categories/update/${editingId}`, {
             method: 'PUT',
             headers: { 
                 'Content-Type': 'application/json',

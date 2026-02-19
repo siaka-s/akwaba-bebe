@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Plus, Search, Edit2, Trash2, Package, AlertCircle, X } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { API_URL } from '@/config';
 
 interface Product {
   id: number;
@@ -29,8 +30,8 @@ export default function AdminProductsPage() {
   const fetchData = async () => {
     try {
       const [resProd, resCat] = await Promise.all([
-        fetch('http://localhost:8080/products', { cache: 'no-store' }),
-        fetch('http://localhost:8080/categories', { cache: 'no-store' })
+        fetch('${API_URL}/products', { cache: 'no-store' }),
+        fetch('${API_URL}/categories', { cache: 'no-store' })
       ]);
       
       const dataProd = await resProd.json();
@@ -111,7 +112,7 @@ export default function AdminProductsPage() {
     const toastId = toast.loading("Suppression en cours...");
 
     try {
-      const res = await fetch(`http://localhost:8080/products/delete/${id}`, {
+      const res = await fetch(`${API_URL}/products/delete/${id}`, {
         method: 'DELETE',
         headers: {
             'Authorization': `Bearer ${token}`

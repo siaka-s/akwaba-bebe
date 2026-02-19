@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Save, ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { API_URL } from '@/config';
 
 export default function EditProductPage() {
   const params = useParams();
@@ -27,13 +28,13 @@ export default function EditProductPage() {
   useEffect(() => {
     const fetchData = async () => {
         // 1. Charger les catégories
-        const catRes = await fetch('http://localhost:8080/categories');
+        const catRes = await fetch('${API_URL}/categories');
         const catData = await catRes.json();
         setCategories(catData || []);
 
         // 2. Charger le produit
         if (params.id) {
-            const prodRes = await fetch(`http://localhost:8080/products/${params.id}`);
+            const prodRes = await fetch(`${API_URL}/products/${params.id}`);
             const prodData = await prodRes.json();
             setProduct(prodData);
             
@@ -67,7 +68,7 @@ export default function EditProductPage() {
         category_id: parseInt(formData.category_id)
     };
 
-    const res = await fetch(`http://localhost:8080/products/update/${params.id}`, {
+    const res = await fetch(`${API_URL}/products/update/${params.id}`, {
         method: 'PUT',
         body: JSON.stringify(payload)
     });

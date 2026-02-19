@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Save, ArrowLeft, Loader2, Image as ImageIcon, ChevronDown, Check, Search, Upload, X, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
+import { API_URL } from '@/config';
 
 // Interface pour le typage
 interface Category {
@@ -36,7 +37,7 @@ export default function AddProductPage() {
 
   // Charger les catégories
   useEffect(() => {
-    fetch('http://localhost:8080/categories')
+    fetch('${API_URL}/categories')
       .then(res => res.json())
       .then(data => setCategories(data || []))
       .catch(err => toast.error("Erreur chargement catégories"));
@@ -85,7 +86,7 @@ export default function AddProductPage() {
 
     try {
         const token = localStorage.getItem('token');
-        const res = await fetch('http://localhost:8080/upload', {
+        const res = await fetch(`${API_URL}/upload`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -146,7 +147,7 @@ export default function AddProductPage() {
             return;
         }
 
-        const res = await fetch('http://localhost:8080/products', {
+        const res = await fetch(`${API_URL}/products`, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',

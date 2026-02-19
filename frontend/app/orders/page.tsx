@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Package, Calendar, Truck, ChevronRight, ShoppingBag, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { API_URL } from '@/config';
 
 interface MyOrder {
   id: number;
@@ -25,7 +26,7 @@ export default function MyOrdersPage() {
       }
 
       try {
-        const res = await fetch('http://localhost:8080/my-orders', {
+        const res = await fetch(`${API_URL}/my-orders`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {

@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { Save, ArrowLeft, Loader2, Image as ImageIcon, ChevronDown, Check, Search, Trash2, Upload } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
+import { API_URL } from '@/config';
 
 interface Category {
   id: number;
@@ -41,8 +42,8 @@ export default function EditProductPage() {
     const initData = async () => {
         try {
             const [resCat, resProd] = await Promise.all([
-                fetch('http://localhost:8080/categories'),
-                fetch(`http://localhost:8080/products/${productId}`)
+                fetch('${API_URL}/categories'),
+                fetch(`${API_URL}/products/${productId}`)
             ]);
 
             const cats = await resCat.json();
@@ -115,7 +116,7 @@ export default function EditProductPage() {
 
     try {
         const token = localStorage.getItem('token');
-        const res = await fetch('http://localhost:8080/upload', {
+        const res = await fetch(`${API_URL}/upload`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` },
             body: uploadData
@@ -170,7 +171,7 @@ export default function EditProductPage() {
             return;
         }
 
-        const res = await fetch(`http://localhost:8080/products/${productId}`, {
+        const res = await fetch(`${API_URL}/products/${productId}`, {
             method: 'PUT',
             headers: { 
                 'Content-Type': 'application/json',

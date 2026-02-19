@@ -70,7 +70,7 @@ export default function OurStoryPage() {
                 <img
                   src="https://hello-ci.com/wp-content/uploads/FILE1986.jpg"
                   alt="Boutique Akwaba Bébé"
-                  className="relative rounded-3xl shadow-xl w-full object-cover h-[400px] md:h-[600px]"
+                  className="relative rounded-3xl shadow-xl w-full object-cover h-100 md:h-100"
                 />
             </div>
 

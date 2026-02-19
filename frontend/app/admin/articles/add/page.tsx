@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { API_URL } from '@/config';
 
 export default function AddArticlePage() {
   const router = useRouter();
@@ -21,7 +22,7 @@ export default function AddArticlePage() {
     const token = localStorage.getItem('token');
 
     try {
-      const res = await fetch('http://localhost:8080/articles', {
+      const res = await fetch(`${API_URL}/articles`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

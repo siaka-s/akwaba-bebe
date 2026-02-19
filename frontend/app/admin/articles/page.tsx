@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Plus, BookOpen, Loader2, Calendar } from 'lucide-react';
+import { API_URL } from '@/config';
 
 interface Article {
   id: number;
@@ -15,7 +16,7 @@ export default function AdminArticlesPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://localhost:8080/articles', { cache: 'no-store' })
+    fetch(`${API_URL}/articles`, { cache: 'no-store' })
       .then(res => res.json())
       .then(data => setArticles(data || []))
       .catch(err => console.error(err))

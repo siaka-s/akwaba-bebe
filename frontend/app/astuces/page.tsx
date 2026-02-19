@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { BookOpen, Calendar, Loader2, ArrowRight, X, Clock } from 'lucide-react';
+import { API_URL } from '@/config';
 
 interface Article {
   id: number;
@@ -19,7 +20,7 @@ export default function BlogPage() {
   useEffect(() => {
     const fetchArticles = async () => {
       try {
-        const res = await fetch('http://localhost:8080/articles', {
+        const res = await fetch(`${API_URL}/articles`, {
             cache: 'no-store'
         });
         if (!res.ok) {

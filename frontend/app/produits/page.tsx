@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import toast from "react-hot-toast";
+import { API_URL } from "@/config";
 
 interface Product {
   id: number;
@@ -44,8 +45,8 @@ export default function ProductsPage() {
     const fetchData = async () => {
       try {
         const [resProd, resCat] = await Promise.all([
-          fetch("http://localhost:8080/products"),
-          fetch("http://localhost:8080/categories"),
+          fetch(`${API_URL}/products`),
+          fetch(`${API_URL}/categories`),
         ]);
         const dataProd = await resProd.json();
         const dataCat = await resCat.json();

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { User, Phone, Mail, Save, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { API_URL } from '@/config';
 
 export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
@@ -23,7 +24,7 @@ export default function ProfilePage() {
       if (!token) return; // Ou redirection vers login
 
       try {
-        const res = await fetch('http://localhost:8080/profile', {
+        const res = await fetch(`${API_URL}/profile`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
@@ -51,7 +52,7 @@ export default function ProfilePage() {
     const token = localStorage.getItem('token');
 
     try {
-        const res = await fetch('http://localhost:8080/profile', {
+        const res = await fetch(`${API_URL}/profile`, {
             method: 'PUT',
             headers: { 
                 'Content-Type': 'application/json',
