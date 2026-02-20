@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Heart, User, Mail, Lock, Phone, Loader2, ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { User, Mail, Lock, Phone, Loader2, ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import toast, { Toaster } from 'react-hot-toast'; // <--- 1. Import de Toast et Toaster
 import { API_URL } from '@/config';
 
 export default function SignupPage() {
@@ -16,9 +17,8 @@ export default function SignupPage() {
     phone: '',
     password: ''
   });
-  const [showPassword, setShowPassword] = useState(false); // Pour l'œil
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -27,7 +27,6 @@ export default function SignupPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
 
     try {
       const res = await fetch(`${API_URL}/signup`, {
@@ -36,27 +35,43 @@ export default function SignupPage() {
         body: JSON.stringify(formData),
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || "Erreur lors de l'inscription");
+      // Gestion robuste de la réponse (JSON ou Texte)
+      const textData = await res.text();
+      let data;
+      try {
+        data = JSON.parse(textData);
+      } catch {
+        data = { message: textData };
       }
 
-      // Succès
-      alert("Compte créé avec succès ! Connectez-vous maintenant.");
-      router.push('/login');
+      if (!res.ok) {
+        // --- 2. ALERTE ERREUR MODERNE ---
+        toast.error(data.message || "Erreur lors de l'inscription");
+        setLoading(false);
+        return;
+      }
+
+      // --- 3. ALERTE SUCCÈS ---
+      const firstName = formData.full_name.split(' ')[0];
+      toast.success(`Bienvenue, ${firstName} ! Votre compte a été créé. ✨`);
+
+      // Petite pause pour voir le toast avant redirection
+      setTimeout(() => {
+        router.push('/login');
+      }, 1500);
 
     } catch (err: any) {
-      setError(err.message);
-    } finally {
+      toast.error("Impossible de contacter le serveur");
       setLoading(false);
     }
   };
 
   return (
-    // FOND DÉGRADÉ (Cohérent avec Login)
     <div className="min-h-screen bg-gradient-to-tl from-primary-50 via-white to-secondary-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       
+      {/* --- COMPOSANT DE NOTIFICATION --- */}
+      <Toaster position="top-right" />
+
       {/* --- DÉCORATION D'ARRIÈRE-PLAN --- */}
       <div className="absolute top-[-10%] left-[-5%] w-96 h-96 bg-primary-200/40 rounded-full blur-3xl" />
       <div className="absolute bottom-[-10%] right-[-5%] w-80 h-80 bg-secondary-200/40 rounded-full blur-3xl animate-pulse" />
@@ -73,7 +88,6 @@ export default function SignupPage() {
       <div className="max-w-md w-full bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden border border-white/50 relative z-10">
         
         <div className="p-8">
-          {/* En-tête */}
           <div className="text-center mb-8">
             <div className="mx-auto h-12 w-12 bg-gradient-to-br from-secondary-100 to-secondary-200 rounded-full flex items-center justify-center shadow-inner mb-4">
               <User className="h-6 w-6 text-secondary-600" />
@@ -87,11 +101,7 @@ export default function SignupPage() {
           </div>
 
           <form className="space-y-5" onSubmit={handleSubmit}>
-            {error && (
-              <div className="bg-red-50 text-red-600 p-4 rounded-xl text-sm text-center border border-red-100 animate-in fade-in slide-in-from-top-2">
-                {error}
-              </div>
-            )}
+            {/* Le bloc error && (...) a été supprimé ici pour utiliser les toasts */}
 
             <div className="space-y-4">
               {/* Nom Complet */}
@@ -148,7 +158,7 @@ export default function SignupPage() {
                 </div>
               </div>
 
-              {/* Mot de passe + Toggle */}
+              {/* Mot de passe */}
               <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Mot de passe</label>
                 <div className="relative">
@@ -175,7 +185,7 @@ export default function SignupPage() {
               </div>
             </div>
 
-            {/* Bouton Inscription (Secondaire / Orange) */}
+            {/* Bouton Inscription */}
             <button
               type="submit"
               disabled={loading}
@@ -186,7 +196,7 @@ export default function SignupPage() {
           </form>
         </div>
 
-        {/* Footer */}
+        {/* Pied de carte */}
         <div className="bg-gray-50/50 px-8 py-6 border-t border-gray-100 text-center">
           <p className="text-sm text-gray-600">
             Déjà inscrit ?{' '}
