@@ -59,7 +59,7 @@ export default function LoginPage() {
 
   return (
     // FOND DÉGRADÉ + ANIMATION SECONDAIRE
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen bg-linear-to-br from-primary-50 via-white to-secondary-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       
       {/* --- CERCLES DÉCORATIFS ANIMÉS (Secondaire) --- */}
       <div className="absolute top-[-10%] right-[-5%] w-96 h-96 bg-secondary-200/40 rounded-full blur-3xl animate-pulse" />
@@ -79,7 +79,7 @@ export default function LoginPage() {
         <div className="p-8">
           {/* En-tête Carte */}
           <div className="text-center mb-8">
-            <div className="mx-auto h-12 w-12 bg-gradient-to-br from-primary-100 to-secondary-100 rounded-full flex items-center justify-center shadow-inner mb-4">
+            <div className="mx-auto h-12 w-12 bg-linear-to-br from-primary-100 to-secondary-100 rounded-full flex items-center justify-center shadow-inner mb-4">
               <Heart className="h-6 w-6 text-primary-600 fill-primary-600" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900">

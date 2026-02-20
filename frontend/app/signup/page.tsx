@@ -67,7 +67,7 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-tl from-primary-50 via-white to-secondary-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen bg-linear-to-tl from-primary-50 via-white to-secondary-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       
       {/* --- COMPOSANT DE NOTIFICATION --- */}
       <Toaster position="top-right" />
@@ -89,7 +89,7 @@ export default function SignupPage() {
         
         <div className="p-8">
           <div className="text-center mb-8">
-            <div className="mx-auto h-12 w-12 bg-gradient-to-br from-secondary-100 to-secondary-200 rounded-full flex items-center justify-center shadow-inner mb-4">
+            <div className="mx-auto h-12 w-12 bg-linear-to-br from-secondary-100 to-secondary-200 rounded-full flex items-center justify-center shadow-inner mb-4">
               <User className="h-6 w-6 text-secondary-600" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900">
