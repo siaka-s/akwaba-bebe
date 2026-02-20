@@ -35,13 +35,24 @@ export default function AddProductPage() {
     category_id: ''
   });
 
-  // Charger les catégories
-  useEffect(() => {
-    fetch('${API_URL}/categories')
-      .then(res => res.json())
-      .then(data => setCategories(data || []))
-      .catch(err => toast.error("Erreur chargement catégories"));
-  }, []);
+ // Charger les catégories
+useEffect(() => {
+  // Changement ici : utilisation de ` ` (backticks) au lieu de ' '
+  fetch(`${API_URL}/categories`) 
+    .then(res => {
+      if (!res.ok) throw new Error("Erreur serveur");
+      return res.json();
+    })
+    .then(data => {
+      //  on s'assure que data est bien un tableau
+      setCategories(Array.isArray(data) ? data : []);
+    })
+    .catch(err => {
+      console.error(err);
+      toast.error("Erreur chargement catégories");
+      setCategories([]); // On initialise à vide pour éviter les crashs
+    });
+}, []);
 
   // Fermer le dropdown si on clique ailleurs
   useEffect(() => {
