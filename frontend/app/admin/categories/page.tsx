@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Plus, Trash2, Edit2, Save, X, Package, AlertTriangle } from 'lucide-react';
-import toast from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast'; // Ajout de Toaster pour l'affichage
 import { API_URL } from '@/config';
 
 interface Category {
@@ -17,17 +17,13 @@ interface Product {
 
 export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [products, setProducts] = useState<Product[]>([]); // Pour compter les produits
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // États pour l'ajout
   const [newCatName, setNewCatName] = useState('');
-  
-  // États pour l'édition
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editName, setEditName] = useState('');
 
-  // 1. Charger Catégories ET Produits (pour le compteur)
   const fetchData = async () => {
     try {
       const [resCat, resProd] = await Promise.all([
@@ -35,14 +31,16 @@ export default function AdminCategoriesPage() {
         fetch(`${API_URL}/products`, { cache: 'no-store' })
       ]);
 
-      const cats = await resCat.json();
-      const prods = await resProd.json();
+      // Sécurité : Si le serveur répond 500 ou vide, on initialise à []
+      const cats = resCat.ok ? await resCat.json() : [];
+      const prods = resProd.ok ? await resProd.json() : [];
 
-      setCategories(cats || []);
-      setProducts(prods || []);
+      setCategories(Array.isArray(cats) ? cats : []);
+      setProducts(Array.isArray(prods) ? prods : []);
     } catch (error) {
       console.error(error);
-      toast.error("Erreur de chargement des données");
+      toast.error("Erreur de connexion au serveur");
+      setCategories([]); // Évite que le .map() ne crash
     } finally {
       setLoading(false);
     }
@@ -52,12 +50,10 @@ export default function AdminCategoriesPage() {
     fetchData();
   }, []);
 
-  // Helper pour compter les produits d'une catégorie
   const getProductCount = (catId: number) => {
     return products.filter(p => p.category_id === catId).length;
   };
 
-  // --- AJOUTER UNE CATÉGORIE ---
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCatName.trim()) {
@@ -76,24 +72,26 @@ export default function AdminCategoriesPage() {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}` // <--- INDISPENSABLE
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({ name: newCatName }),
         });
 
+        const data = await res.json();
+
         if (res.ok) {
             toast.success("Catégorie ajoutée !");
             setNewCatName('');
-            fetchData(); // Recharger la liste
+            fetchData();
         } else {
-            toast.error("Erreur lors de la création");
+            // Affiche le message précis du backend (ex: "Le nom est requis")
+            toast.error(data.message || "Erreur lors de la création");
         }
     } catch (error) {
         toast.error("Erreur serveur");
     }
   };
 
-  // --- SUPPRIMER (Avec Toast de confirmation) ---
   const handleDeleteClick = (id: number, count: number) => {
     if (count > 0) {
         toast.error(`Impossible : Cette catégorie contient ${count} produits.`);
@@ -134,18 +132,19 @@ export default function AdminCategoriesPage() {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
+        const data = await res.json();
+
         if (res.ok) {
             toast.success("Catégorie supprimée");
             fetchData();
         } else {
-            toast.error("Erreur suppression");
+            toast.error(data.message || "Erreur suppression");
         }
     } catch (e) {
         toast.error("Erreur serveur");
     }
   };
 
-  // --- MODIFIER ---
   const startEdit = (cat: Category) => {
     setEditingId(cat.id);
     setEditName(cat.name);
@@ -153,7 +152,6 @@ export default function AdminCategoriesPage() {
 
   const saveEdit = async () => {
     if (!editingId || !editName.trim()) return;
-
     const token = localStorage.getItem('token');
     
     try {
@@ -166,22 +164,27 @@ export default function AdminCategoriesPage() {
             body: JSON.stringify({ name: editName }),
         });
 
+        const data = await res.json();
+
         if (res.ok) {
             toast.success("Catégorie modifiée");
             setEditingId(null);
             fetchData();
         } else {
-            toast.error("Erreur modification");
+            toast.error(data.message || "Erreur modification");
         }
     } catch (e) {
         toast.error("Erreur serveur");
     }
   };
 
-  if (loading) return <div className="p-10 text-center">Chargement...</div>;
+  if (loading) return <div className="p-10 text-center font-bold text-primary-600">Chargement des catégories...</div>;
 
   return (
-    <div className="max-w-4xl mx-auto pb-12">
+    <div className="max-w-4xl mx-auto pb-12 p-4">
+      {/* Ajout du Toaster pour centrer les messages */}
+      <Toaster position="top-center" />
+
       <h1 className="text-3xl font-bold text-primary-900 mb-2">Gestion des Catégories</h1>
       <p className="text-gray-500 mb-8">Créez des catégories pour organiser vos produits.</p>
 
@@ -219,12 +222,8 @@ export default function AdminCategoriesPage() {
               
               return (
                 <tr key={cat.id} className="hover:bg-gray-50 transition-colors">
-                  {/* Numéro simple (Index + 1) */}
-                  <td className="p-4 text-center text-gray-400 font-medium">
-                    {index + 1}
-                  </td>
+                  <td className="p-4 text-center text-gray-400 font-medium">{index + 1}</td>
                   
-                  {/* Nom (Mode Lecture ou Édition) */}
                   <td className="p-4 font-bold text-gray-800 text-lg">
                     {editingId === cat.id ? (
                         <input 
@@ -238,7 +237,6 @@ export default function AdminCategoriesPage() {
                     )}
                   </td>
 
-                  {/* Nombre de produits */}
                   <td className="p-4 text-center">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         productCount > 0 ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
@@ -248,7 +246,6 @@ export default function AdminCategoriesPage() {
                     </span>
                   </td>
 
-                  {/* Actions */}
                   <td className="p-4 text-right">
                     <div className="flex justify-end gap-2">
                       {editingId === cat.id ? (
@@ -263,10 +260,9 @@ export default function AdminCategoriesPage() {
                                 onClick={() => handleDeleteClick(cat.id, productCount)} 
                                 className={`p-2 rounded-lg transition-colors ${
                                     productCount > 0 
-                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed' // Désactivé si produits liés
+                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                     : 'bg-red-50 text-red-500 hover:bg-red-100'
                                 }`}
-                                title={productCount > 0 ? "Impossible de supprimer : contient des produits" : "Supprimer"}
                             >
                                 <Trash2 className="h-4 w-4"/>
                             </button>
