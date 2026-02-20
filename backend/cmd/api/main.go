@@ -166,8 +166,9 @@ func productHandlerDispatcher(w http.ResponseWriter, r *http.Request, h *handler
 // Middleware CORS optimisé pour Vercel & Local
 func enableCORS(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// On récupère l'origine pour renvoyer la même (indispensable pour les credentials)
 		origin := r.Header.Get("Origin")
+
+		// Autorise localhost et ton futur domaine Vercel
 		if origin != "" {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 		} else {
@@ -175,11 +176,10 @@ func enableCORS(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-		// Vercel et Next.js envoient souvent des headers spécifiques, on les autorise tous :
-		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, Authorization, X-Requested-With")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Authorization")
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
 
-		// TRÈS IMPORTANT : Répondre OK immédiatement à OPTIONS
+		// Réponse immédiate pour les requêtes Preflight OPTIONS (indispensable pour Vercel)
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
 			return
