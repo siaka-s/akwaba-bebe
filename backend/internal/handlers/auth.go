@@ -39,19 +39,23 @@ type ProfileResponse struct {
 }
 
 // --- 1. INSCRIPTION (Signup) ---
+// --- 1. INSCRIPTION (Signup) ---
 func (h *AuthHandler) Signup(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json") // On prévient le front qu'on envoie du JSON
 	var input models.SignupInput
 
 	// Décodage du JSON
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "Données invalides", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Données JSON invalides"})
 		return
 	}
 
 	// Hashage du mot de passe
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 	if err != nil {
-		http.Error(w, "Erreur serveur de cryptographie", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Erreur interne de sécurité"})
 		return
 	}
 
@@ -63,14 +67,22 @@ func (h *AuthHandler) Signup(w http.ResponseWriter, r *http.Request) {
 
 	id := 0
 	err = h.DB.QueryRow(sqlStatement, input.Email, string(hashedPassword), input.FullName, input.Phone).Scan(&id)
+
 	if err != nil {
-		// Gestion conflit email unique
-		http.Error(w, "Cet email est déjà utilisé", http.StatusConflict)
+		w.WriteHeader(http.StatusInternalServerError)
+		// Ici on envoie la VRAIE erreur pour le debug
+		json.NewEncoder(w).Encode(map[string]string{
+			"message": fmt.Sprintf("Erreur BDD : %v", err),
+		})
 		return
 	}
 
+	// Réponse Succès en JSON propre
 	w.WriteHeader(http.StatusCreated)
-	fmt.Fprintf(w, `{"message": "Utilisateur créé avec succès", "id": %d}`, id)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message": "Utilisateur créé avec succès",
+		"id":      id,
+	})
 }
 
 // --- 2. CONNEXION (Login) ---
