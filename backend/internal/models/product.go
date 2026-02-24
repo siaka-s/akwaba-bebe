@@ -8,4 +8,5 @@ type Product struct {
 	StockQuantity int     `json:"stock_quantity"`
 	ImageURL      string  `json:"image_url"`
 	CategoryID    int     `json:"category_id"`
+	SubcategoryID *int    `json:"subcategory_id"` // Pointeur pour gérer NULL en base
 }

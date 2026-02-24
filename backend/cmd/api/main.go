@@ -29,6 +29,7 @@ func main() {
 	productHandler := &handlers.ProductHandler{DB: db}
 	authHandler := &handlers.AuthHandler{DB: db}
 	categoryHandler := &handlers.CategoryHandler{DB: db}
+	subCategoryHandler := &handlers.SubCategoryHandler{DB: db}
 	articleHandler := &handlers.ArticleHandler{DB: db}
 	orderHandler := &handlers.OrderHandler{DB: db}
 
@@ -96,6 +97,28 @@ func main() {
 	http.HandleFunc("/categories/delete/", enableCORS(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "DELETE" {
 			categoryHandler.DeleteCategory(w, r)
+		}
+	}))
+
+	// --- ROUTES SOUS-CATÉGORIES ---
+	http.HandleFunc("/subcategories", enableCORS(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "GET":
+			subCategoryHandler.GetSubCategories(w, r)
+		case "POST":
+			middleware.IsAdmin(subCategoryHandler.CreateSubCategory)(w, r)
+		}
+	}))
+
+	http.HandleFunc("/subcategories/update/", enableCORS(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "PUT" {
+			middleware.IsAdmin(subCategoryHandler.UpdateSubCategory)(w, r)
+		}
+	}))
+
+	http.HandleFunc("/subcategories/delete/", enableCORS(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "DELETE" {
+			middleware.IsAdmin(subCategoryHandler.DeleteSubCategory)(w, r)
 		}
 	}))
 

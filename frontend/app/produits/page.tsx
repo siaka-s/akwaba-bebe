@@ -23,6 +23,7 @@ interface Product {
   stock_quantity: number;
   image_url: string;
   category_id: number;
+  subcategory_id: number | null;
 }
 
 interface Category {
@@ -30,14 +31,22 @@ interface Category {
   name: string;
 }
 
+interface SubCategory {
+  id: number;
+  name: string;
+  category_id: number;
+}
+
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [subcategories, setSubcategories] = useState<SubCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const { addToCart } = useCart();
 
   // Filtres
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  const [selectedSubcategory, setSelectedSubcategory] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -61,6 +70,15 @@ export default function ProductsPage() {
     fetchData();
   }, []);
 
+  // Charger les sous-catégories quand la catégorie change
+  useEffect(() => {
+    if (!selectedCategory) { setSubcategories([]); setSelectedSubcategory(null); return; }
+    fetch(`${API_URL}/subcategories?category_id=${selectedCategory}`)
+      .then(res => res.ok ? res.json() : [])
+      .then(data => { setSubcategories(Array.isArray(data) ? data : []); setSelectedSubcategory(null); })
+      .catch(() => setSubcategories([]));
+  }, [selectedCategory]);
+
   const handleAddToCart = (e: React.MouseEvent, product: Product) => {
     e.preventDefault();
     e.stopPropagation();
@@ -75,11 +93,10 @@ export default function ProductsPage() {
   };
 
   const filteredProducts = products.filter((p) => {
-    const matchCategory = selectedCategory
-      ? p.category_id === selectedCategory
-      : true;
+    const matchCategory = selectedCategory ? p.category_id === selectedCategory : true;
+    const matchSubcategory = selectedSubcategory ? p.subcategory_id === selectedSubcategory : true;
     const matchSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchCategory && matchSearch;
+    return matchCategory && matchSubcategory && matchSearch;
   });
 
   if (loading)
@@ -169,6 +186,29 @@ export default function ProductsPage() {
                       >
                         {cat.name}
                       </button>
+
+                      {/* Sous-catégories en retrait */}
+                      {selectedCategory === cat.id && subcategories.length > 0 && (
+                        <ul className="mt-1 ml-3 space-y-1 border-l-2 border-primary-100 pl-3">
+                          {subcategories.map(sc => (
+                            <li key={sc.id}>
+                              <button
+                                onClick={() => {
+                                  setSelectedSubcategory(selectedSubcategory === sc.id ? null : sc.id);
+                                  setIsMobileMenuOpen(false);
+                                }}
+                                className={`w-full text-left px-3 py-1.5 rounded-lg text-xs transition-all ${
+                                  selectedSubcategory === sc.id
+                                    ? "text-primary-700 font-bold bg-primary-50"
+                                    : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
+                                }`}
+                              >
+                                {sc.name}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </li>
                   ))}
                 </ul>

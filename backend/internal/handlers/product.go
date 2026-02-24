@@ -21,7 +21,7 @@ func (h *ProductHandler) GetAllProducts(w http.ResponseWriter, r *http.Request) 
 	w.Header().Set("Content-Type", "application/json")
 
 	// Sélection des champs essentiels
-	rows, err := h.DB.Query("SELECT id, name, description, price, stock_quantity, image_url, category_id FROM products ORDER BY id ASC")
+	rows, err := h.DB.Query("SELECT id, name, description, price, stock_quantity, image_url, category_id, subcategory_id FROM products ORDER BY id ASC")
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"message": "Erreur serveur BDD"})
@@ -33,7 +33,7 @@ func (h *ProductHandler) GetAllProducts(w http.ResponseWriter, r *http.Request) 
 	products := make([]models.Product, 0)
 	for rows.Next() {
 		var p models.Product
-		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.StockQuantity, &p.ImageURL, &p.CategoryID); err != nil {
+		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.StockQuantity, &p.ImageURL, &p.CategoryID, &p.SubcategoryID); err != nil {
 			continue
 		}
 		products = append(products, p)
@@ -56,10 +56,10 @@ func (h *ProductHandler) GetProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var p models.Product
-	sqlStatement := `SELECT id, name, description, price, stock_quantity, image_url, category_id FROM products WHERE id=$1`
+	sqlStatement := `SELECT id, name, description, price, stock_quantity, image_url, category_id, subcategory_id FROM products WHERE id=$1`
 
 	row := h.DB.QueryRow(sqlStatement, id)
-	err = row.Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.StockQuantity, &p.ImageURL, &p.CategoryID)
+	err = row.Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.StockQuantity, &p.ImageURL, &p.CategoryID, &p.SubcategoryID)
 
 	if err == sql.ErrNoRows {
 		w.WriteHeader(http.StatusNotFound)
@@ -88,12 +88,12 @@ func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sqlStatement := `
-        INSERT INTO products (name, description, price, stock_quantity, image_url, category_id)
-        VALUES ($1, $2, $3, $4, $5, $6)
+        INSERT INTO products (name, description, price, stock_quantity, image_url, category_id, subcategory_id)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
         RETURNING id`
 
 	id := 0
-	err := h.DB.QueryRow(sqlStatement, p.Name, p.Description, p.Price, p.StockQuantity, p.ImageURL, p.CategoryID).Scan(&id)
+	err := h.DB.QueryRow(sqlStatement, p.Name, p.Description, p.Price, p.StockQuantity, p.ImageURL, p.CategoryID, p.SubcategoryID).Scan(&id)
 	if err != nil {
 		fmt.Printf("Erreur BDD CreateProduct : %v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -126,10 +126,10 @@ func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 
 	query := `
         UPDATE products
-        SET name=$1, description=$2, price=$3, stock_quantity=$4, image_url=$5, category_id=$6
-        WHERE id=$7`
+        SET name=$1, description=$2, price=$3, stock_quantity=$4, image_url=$5, category_id=$6, subcategory_id=$7
+        WHERE id=$8`
 
-	res, err := h.DB.Exec(query, p.Name, p.Description, p.Price, p.StockQuantity, p.ImageURL, p.CategoryID, id)
+	res, err := h.DB.Exec(query, p.Name, p.Description, p.Price, p.StockQuantity, p.ImageURL, p.CategoryID, p.SubcategoryID, id)
 	if err != nil {
 		fmt.Printf("Erreur BDD UpdateProduct id=%d : %v\n", id, err)
 		w.WriteHeader(http.StatusInternalServerError)

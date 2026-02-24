@@ -16,17 +16,29 @@ interface Category {
   name: string;
 }
 
+interface SubCategory {
+  id: number;
+  name: string;
+  category_id: number;
+}
+
 export default function AddProductPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false); // Chargement global (sauvegarde)
   const [uploadingImage, setUploadingImage] = useState(false); // Chargement spécifique upload image
 
   const [categories, setCategories] = useState<Category[]>([]);
+  const [subcategories, setSubcategories] = useState<SubCategory[]>([]);
 
   // --- ÉTATS POUR LA RECHERCHE CATÉGORIE ---
   const [categorySearch, setCategorySearch] = useState('');
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // --- ÉTATS POUR LA RECHERCHE SOUS-CATÉGORIE ---
+  const [subcategorySearch, setSubcategorySearch] = useState('');
+  const [showSubcategoryDropdown, setShowSubcategoryDropdown] = useState(false);
+  const subcategoryDropdownRef = useRef<HTMLDivElement>(null);
 
   // État du formulaire
   const [formData, setFormData] = useState({
@@ -34,39 +46,42 @@ export default function AddProductPage() {
     description: '',
     price: '',
     stock_quantity: '',
-    image_url: '', // On stockera l'URL S3 ici une fois l'upload fini
-    category_id: ''
+    image_url: '',
+    category_id: '',
+    subcategory_id: ''
   });
 
- // Charger les catégories
-useEffect(() => {
-  // Changement ici : utilisation de ` ` (backticks) au lieu de ' '
-  fetch(`${API_URL}/categories`) 
-    .then(res => {
-      if (!res.ok) throw new Error("Erreur serveur");
-      return res.json();
-    })
-    .then(data => {
-      //  on s'assure que data est bien un tableau
-      setCategories(Array.isArray(data) ? data : []);
-    })
-    .catch(err => {
-      console.error(err);
-      toast.error("Erreur chargement catégories");
-      setCategories([]); // On initialise à vide pour éviter les crashs
-    });
-}, []);
+  // Charger les catégories
+  useEffect(() => {
+    fetch(`${API_URL}/categories`)
+      .then(res => { if (!res.ok) throw new Error("Erreur serveur"); return res.json(); })
+      .then(data => setCategories(Array.isArray(data) ? data : []))
+      .catch(err => { console.error(err); toast.error("Erreur chargement catégories"); setCategories([]); });
+  }, []);
 
-  // Fermer le dropdown si on clique ailleurs
+  // Charger les sous-catégories quand la catégorie change
+  const fetchSubcategories = async (catId: string) => {
+    if (!catId) { setSubcategories([]); return; }
+    try {
+      const res = await fetch(`${API_URL}/subcategories?category_id=${catId}`);
+      const data = res.ok ? await res.json() : [];
+      setSubcategories(Array.isArray(data) ? data : []);
+    } catch { setSubcategories([]); }
+  };
+
+  // Fermer les dropdowns si on clique ailleurs
   useEffect(() => {
     function handleClickOutside(event: any) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowCategoryDropdown(false);
       }
+      if (subcategoryDropdownRef.current && !subcategoryDropdownRef.current.contains(event.target)) {
+        setShowSubcategoryDropdown(false);
+      }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [dropdownRef]);
+  }, [dropdownRef, subcategoryDropdownRef]);
 
   const handleChange = (e: any) => {
     setFormData({...formData, [e.target.name]: e.target.value});
@@ -74,13 +89,26 @@ useEffect(() => {
 
   // --- LOGIQUE SÉLECTION CATÉGORIE ---
   const handleSelectCategory = (cat: Category) => {
-    setFormData({ ...formData, category_id: cat.id.toString() });
+    setFormData({ ...formData, category_id: cat.id.toString(), subcategory_id: '' });
     setCategorySearch(cat.name);
+    setSubcategorySearch('');
     setShowCategoryDropdown(false);
+    fetchSubcategories(cat.id.toString());
   };
 
-  const filteredCategories = categories.filter(cat => 
+  const filteredCategories = categories.filter(cat =>
     cat.name.toLowerCase().includes(categorySearch.toLowerCase())
+  );
+
+  // --- LOGIQUE SÉLECTION SOUS-CATÉGORIE ---
+  const handleSelectSubcategory = (sc: SubCategory) => {
+    setFormData({ ...formData, subcategory_id: sc.id.toString() });
+    setSubcategorySearch(sc.name);
+    setShowSubcategoryDropdown(false);
+  };
+
+  const filteredSubcategories = subcategories.filter(sc =>
+    sc.name.toLowerCase().includes(subcategorySearch.toLowerCase())
   );
 
   // --- NOUVELLE LOGIQUE : UPLOAD IMAGE VERS S3 ---
@@ -151,7 +179,8 @@ useEffect(() => {
         price: parseFloat(formData.price),
         stock_quantity: parseInt(formData.stock_quantity),
         image_url: formData.image_url,
-        category_id: parseInt(formData.category_id)
+        category_id: parseInt(formData.category_id),
+        subcategory_id: formData.subcategory_id ? parseInt(formData.subcategory_id) : null
     };
 
     try {
@@ -286,6 +315,56 @@ useEffect(() => {
                 </div>
             )}
         </div>
+
+        {/* Sous-catégorie (conditionnelle) */}
+        {formData.category_id && (
+          <div ref={subcategoryDropdownRef} className="relative">
+            <label className="block text-sm font-bold text-gray-700 mb-2">
+              Sous-catégorie <span className="text-gray-400 font-normal">(optionnel)</span>
+            </label>
+            <div className="relative">
+              <Input
+                type="text"
+                placeholder={subcategories.length > 0 ? "Rechercher une sous-catégorie..." : "Aucune sous-catégorie disponible"}
+                value={subcategorySearch}
+                disabled={subcategories.length === 0}
+                onChange={(e) => {
+                  setSubcategorySearch(e.target.value);
+                  setShowSubcategoryDropdown(true);
+                  setFormData({ ...formData, subcategory_id: '' });
+                }}
+                onFocus={() => setShowSubcategoryDropdown(true)}
+                className="pr-10"
+              />
+              <div className="absolute right-3 top-3.5 text-gray-400 pointer-events-none">
+                {showSubcategoryDropdown ? <Search className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              </div>
+            </div>
+
+            {showSubcategoryDropdown && subcategories.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-auto">
+                <ul>
+                  <li
+                    onClick={() => { setFormData({ ...formData, subcategory_id: '' }); setSubcategorySearch(''); setShowSubcategoryDropdown(false); }}
+                    className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-gray-400 italic text-sm"
+                  >
+                    — Aucune sous-catégorie
+                  </li>
+                  {filteredSubcategories.map(sc => (
+                    <li
+                      key={sc.id}
+                      onClick={() => handleSelectSubcategory(sc)}
+                      className="px-4 py-3 hover:bg-primary-50 cursor-pointer flex justify-between items-center"
+                    >
+                      <span>{sc.name}</span>
+                      {formData.subcategory_id === sc.id.toString() && <Check className="h-4 w-4 text-primary-600" />}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* --- ZONE D'UPLOAD IMAGE (MODIFIÉE) --- */}
         <div>
