@@ -2,10 +2,13 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Save, ArrowLeft, Loader2, Image as ImageIcon, ChevronDown, Check, Search, Trash2, Upload } from 'lucide-react';
+import { Save, ArrowLeft, Loader2, ChevronDown, Check, Search, Trash2, Upload } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { API_URL } from '@/config';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 interface Category {
   id: number;
@@ -139,9 +142,31 @@ export default function EditProductPage() {
   };
 
   const handleRemoveImage = () => {
-      if(confirm("Voulez-vous vraiment retirer cette image ?")) {
-          setFormData(prev => ({ ...prev, image_url: '' }));
-      }
+    toast((t) => (
+      <div className="flex flex-col gap-3">
+        <div>
+          <p className="font-bold text-gray-900">Retirer cette image ?</p>
+          <p className="text-sm text-gray-500">Vous pourrez en uploader une nouvelle.</p>
+        </div>
+        <div className="flex gap-2 justify-end">
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            Annuler
+          </button>
+          <button
+            onClick={() => {
+              toast.dismiss(t.id);
+              setFormData(prev => ({ ...prev, image_url: '' }));
+            }}
+            className="px-3 py-1.5 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+          >
+            Oui, retirer
+          </button>
+        </div>
+      </div>
+    ), { duration: 5000, position: 'top-center' });
   };
 
   // --- SOUMISSION ---
@@ -212,20 +237,20 @@ export default function EditProductPage() {
         {/* Nom */}
         <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">Nom du produit</label>
-            <input required type="text" name="name" value={formData.name} onChange={handleChange} className="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none transition-all" />
+            <Input required type="text" name="name" value={formData.name} onChange={handleChange} />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">Prix (FCFA)</label>
                 <div className="relative">
-                    <input required type="number" name="price" value={formData.price} onChange={handleChange} className="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" />
-                    <span className="absolute right-4 top-3 text-gray-400 text-sm font-bold">FCFA</span>
+                    <Input required type="number" name="price" value={formData.price} onChange={handleChange} className="pr-14" />
+                    <span className="absolute right-4 top-2.5 text-gray-400 text-sm font-bold">FCFA</span>
                 </div>
             </div>
             <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">Stock</label>
-                <input required type="number" name="stock_quantity" value={formData.stock_quantity} onChange={handleChange} className="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" />
+                <Input required type="number" name="stock_quantity" value={formData.stock_quantity} onChange={handleChange} />
             </div>
         </div>
 
@@ -233,7 +258,7 @@ export default function EditProductPage() {
         <div ref={dropdownRef} className="relative">
             <label className="block text-sm font-bold text-gray-700 mb-2">Catégorie</label>
             <div className="relative">
-                <input 
+                <Input
                     type="text"
                     value={categorySearch}
                     onChange={(e) => {
@@ -243,9 +268,7 @@ export default function EditProductPage() {
                     }}
                     onFocus={() => setShowCategoryDropdown(true)}
                     placeholder="Rechercher une catégorie..."
-                    className={`w-full border p-3 rounded-xl outline-none focus:ring-2 focus:ring-primary-500 pr-10 ${
-                        !formData.category_id && categorySearch ? 'border-orange-300 ring-1 ring-orange-200' : 'border-gray-300'
-                    }`}
+                    className={`pr-10 ${!formData.category_id && categorySearch ? 'border-orange-300' : ''}`}
                 />
                 <div className="absolute right-3 top-3.5 text-gray-400 pointer-events-none">
                     {showCategoryDropdown ? <Search className="h-5 w-5"/> : <ChevronDown className="h-5 w-5"/>}
@@ -331,19 +354,15 @@ export default function EditProductPage() {
         {/* Description */}
         <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">Description</label>
-            <textarea required name="description" rows={4} value={formData.description} onChange={handleChange} className="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" />
+            <Textarea required name="description" rows={4} value={formData.description} onChange={handleChange} />
         </div>
 
         {/* Actions */}
         <div className="pt-4 border-t border-gray-100 flex justify-end">
-            <button 
-                type="submit" 
-                disabled={loading || uploadingImage} 
-                className="bg-primary-600 text-white px-8 py-4 rounded-xl font-bold hover:bg-primary-700 transition-all flex items-center gap-2 shadow-lg disabled:opacity-50"
-            >
+            <Button type="submit" disabled={loading || uploadingImage} size="lg">
                 {loading ? <Loader2 className="animate-spin h-5 w-5"/> : <Save className="h-5 w-5"/>}
                 Sauvegarder les modifications
-            </button>
+            </Button>
         </div>
 
       </form>

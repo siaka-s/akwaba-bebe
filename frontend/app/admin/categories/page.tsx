@@ -2,8 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { Plus, Trash2, Edit2, Save, X, Package, AlertTriangle } from 'lucide-react';
-import toast, { Toaster } from 'react-hot-toast'; // Ajout de Toaster pour l'affichage
+import toast from 'react-hot-toast';
 import { API_URL } from '@/config';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface Category {
   id: number;
@@ -178,109 +182,104 @@ export default function AdminCategoriesPage() {
     }
   };
 
-  if (loading) return <div className="p-10 text-center font-bold text-primary-600">Chargement des catégories...</div>;
+  if (loading) return <div className="p-10 text-center text-muted-foreground">Chargement...</div>;
 
   return (
-    <div className="max-w-4xl mx-auto pb-12 p-4">
-      {/* Ajout du Toaster pour centrer les messages */}
-      <Toaster position="top-center" />
+    <div className="max-w-4xl mx-auto pb-12">
 
-      <h1 className="text-3xl font-bold text-primary-900 mb-2">Gestion des Catégories</h1>
-      <p className="text-gray-500 mb-8">Créez des catégories pour organiser vos produits.</p>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-primary-900">Gestion des Catégories</h1>
+        <p className="text-muted-foreground text-sm mt-1">Créez des catégories pour organiser vos produits.</p>
+      </div>
 
       {/* Formulaire Ajout */}
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
+      <div className="rounded-xl border bg-card shadow-sm p-6 mb-8">
         <h2 className="font-bold text-lg mb-4 text-gray-800">Ajouter une nouvelle catégorie</h2>
-        <form onSubmit={handleAdd} className="flex gap-4">
-          <input 
-            type="text" 
+        <form onSubmit={handleAdd} className="flex gap-3">
+          <Input
+            type="text"
             value={newCatName}
             onChange={(e) => setNewCatName(e.target.value)}
             placeholder="Nom de la catégorie (ex: Hygiène, Vêtements...)"
-            className="flex-1 border border-gray-300 rounded-xl p-3 outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+            className="flex-1"
           />
-          <button type="submit" className="bg-primary-600 text-white px-6 rounded-xl font-bold flex items-center gap-2 hover:bg-primary-700 shadow-md">
-            <Plus className="h-5 w-5"/> Ajouter
-          </button>
+          <Button type="submit">
+            <Plus className="h-4 w-4" /> Ajouter
+          </Button>
         </form>
       </div>
 
       {/* Liste */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <table className="w-full text-left border-collapse">
-          <thead className="bg-gray-50 border-b border-gray-200 text-gray-500 text-sm uppercase">
-            <tr>
-              <th className="p-4 w-16 text-center">#</th>
-              <th className="p-4">Nom de la catégorie</th>
-              <th className="p-4 text-center">Produits associés</th>
-              <th className="p-4 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
+      <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-16 text-center">#</TableHead>
+              <TableHead>Nom de la catégorie</TableHead>
+              <TableHead className="text-center">Produits associés</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {categories.map((cat, index) => {
               const productCount = getProductCount(cat.id);
-              
               return (
-                <tr key={cat.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="p-4 text-center text-gray-400 font-medium">{index + 1}</td>
-                  
-                  <td className="p-4 font-bold text-gray-800 text-lg">
+                <TableRow key={cat.id}>
+                  <TableCell className="text-center text-muted-foreground font-medium">{index + 1}</TableCell>
+
+                  <TableCell className="font-bold text-gray-800">
                     {editingId === cat.id ? (
-                        <input 
-                          value={editName} 
-                          autoFocus
-                          onChange={(e) => setEditName(e.target.value)} 
-                          className="border border-primary-300 p-2 rounded-lg w-full outline-none ring-2 ring-primary-100"
-                        />
+                      <Input
+                        value={editName}
+                        autoFocus
+                        onChange={(e) => setEditName(e.target.value)}
+                        className="h-8"
+                      />
                     ) : (
-                        cat.name
+                      cat.name
                     )}
-                  </td>
+                  </TableCell>
 
-                  <td className="p-4 text-center">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        productCount > 0 ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
-                    }`}>
-                        <Package className="h-3 w-3 mr-1"/>
-                        {productCount} produit{productCount > 1 ? 's' : ''}
-                    </span>
-                  </td>
+                  <TableCell className="text-center">
+                    <Badge variant={productCount > 0 ? 'secondary' : 'outline'} className="gap-1">
+                      <Package className="h-3 w-3" />
+                      {productCount} produit{productCount > 1 ? 's' : ''}
+                    </Badge>
+                  </TableCell>
 
-                  <td className="p-4 text-right">
+                  <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       {editingId === cat.id ? (
                         <>
-                            <button onClick={saveEdit} className="p-2 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition-colors"><Save className="h-4 w-4"/></button>
-                            <button onClick={() => setEditingId(null)} className="p-2 bg-gray-50 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"><X className="h-4 w-4"/></button>
+                          <Button variant="outline" size="icon" onClick={saveEdit} className="text-green-600 border-green-200 hover:bg-green-50"><Save className="h-4 w-4"/></Button>
+                          <Button variant="outline" size="icon" onClick={() => setEditingId(null)}><X className="h-4 w-4"/></Button>
                         </>
                       ) : (
                         <>
-                            <button onClick={() => startEdit(cat)} className="p-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"><Edit2 className="h-4 w-4"/></button>
-                            <button 
-                                onClick={() => handleDeleteClick(cat.id, productCount)} 
-                                className={`p-2 rounded-lg transition-colors ${
-                                    productCount > 0 
-                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                    : 'bg-red-50 text-red-500 hover:bg-red-100'
-                                }`}
-                            >
-                                <Trash2 className="h-4 w-4"/>
-                            </button>
+                          <Button variant="outline" size="icon" onClick={() => startEdit(cat)}><Edit2 className="h-4 w-4"/></Button>
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            disabled={productCount > 0}
+                            onClick={() => handleDeleteClick(cat.id, productCount)}
+                          >
+                            <Trash2 className="h-4 w-4"/>
+                          </Button>
                         </>
                       )}
                     </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               );
             })}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
 
         {categories.length === 0 && (
-            <div className="p-8 text-center text-gray-500 flex flex-col items-center">
-                <AlertTriangle className="h-8 w-8 text-orange-300 mb-2"/>
-                <p>Aucune catégorie pour le moment.</p>
-            </div>
+          <div className="p-10 text-center flex flex-col items-center text-muted-foreground">
+            <AlertTriangle className="h-10 w-10 text-orange-300 mb-2" />
+            <p>Aucune catégorie pour le moment.</p>
+          </div>
         )}
       </div>
     </div>

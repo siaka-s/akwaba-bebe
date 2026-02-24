@@ -2,10 +2,13 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Save, ArrowLeft, Loader2, Image as ImageIcon, ChevronDown, Check, Search, Upload, X, Trash2 } from 'lucide-react';
+import { Save, ArrowLeft, Loader2, ChevronDown, Check, Search, Upload, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { API_URL } from '@/config';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 // Interface pour le typage
 interface Category {
@@ -199,14 +202,13 @@ useEffect(() => {
         {/* Nom */}
         <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">Nom du produit</label>
-            <input 
-                required 
-                type="text" 
-                name="name" 
+            <Input
+                required
+                type="text"
+                name="name"
                 placeholder="Ex: Lait Guigoz 1er âge"
-                value={formData.name} 
-                onChange={handleChange} 
-                className="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" 
+                value={formData.name}
+                onChange={handleChange}
             />
         </div>
 
@@ -215,30 +217,29 @@ useEffect(() => {
             <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">Prix (FCFA)</label>
                 <div className="relative">
-                    <input 
-                        required 
-                        type="number" 
-                        name="price" 
+                    <Input
+                        required
+                        type="number"
+                        name="price"
                         min="0"
                         placeholder="0"
-                        value={formData.price} 
-                        onChange={handleChange} 
-                        className="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" 
+                        value={formData.price}
+                        onChange={handleChange}
+                        className="pr-14"
                     />
-                    <span className="absolute right-4 top-3 text-gray-400 text-sm font-bold">FCFA</span>
+                    <span className="absolute right-4 top-2.5 text-gray-400 text-sm font-bold">FCFA</span>
                 </div>
             </div>
             <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">Quantité en stock</label>
-                <input 
-                    required 
-                    type="number" 
-                    name="stock_quantity" 
+                <Input
+                    required
+                    type="number"
+                    name="stock_quantity"
                     min="0"
                     placeholder="10"
-                    value={formData.stock_quantity} 
-                    onChange={handleChange} 
-                    className="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" 
+                    value={formData.stock_quantity}
+                    onChange={handleChange}
                 />
             </div>
         </div>
@@ -247,7 +248,7 @@ useEffect(() => {
         <div ref={dropdownRef} className="relative">
             <label className="block text-sm font-bold text-gray-700 mb-2">Catégorie</label>
             <div className="relative">
-                <input 
+                <Input
                     type="text"
                     placeholder="Rechercher une catégorie..."
                     value={categorySearch}
@@ -257,9 +258,7 @@ useEffect(() => {
                         setFormData({...formData, category_id: ''});
                     }}
                     onFocus={() => setShowCategoryDropdown(true)}
-                    className={`w-full border p-3 rounded-xl outline-none focus:ring-2 focus:ring-primary-500 pr-10 ${
-                        !formData.category_id && categorySearch ? 'border-orange-300' : 'border-gray-300'
-                    }`}
+                    className={`pr-10 ${!formData.category_id && categorySearch ? 'border-orange-300' : ''}`}
                 />
                 <div className="absolute right-3 top-3.5 text-gray-400 pointer-events-none">
                     {showCategoryDropdown ? <Search className="h-5 w-5"/> : <ChevronDown className="h-5 w-5"/>}
@@ -349,26 +348,25 @@ useEffect(() => {
         {/* Description */}
         <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">Description</label>
-            <textarea 
-                required 
-                name="description" 
-                rows={4} 
-                value={formData.description} 
-                onChange={handleChange} 
-                className="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" 
+            <Textarea
+                required
+                name="description"
+                rows={4}
+                value={formData.description}
+                onChange={handleChange}
             />
         </div>
 
         {/* Actions */}
         <div className="pt-4 border-t border-gray-100 flex justify-end">
-            <button 
-                type="submit" 
-                disabled={loading || uploadingImage} // Désactivé si on sauvegarde OU si on upload une image
-                className="bg-primary-600 text-white px-8 py-4 rounded-xl font-bold hover:bg-primary-700 transition-all flex items-center gap-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            <Button
+                type="submit"
+                disabled={loading || uploadingImage}
+                size="lg"
             >
                 {loading ? <Loader2 className="animate-spin h-5 w-5"/> : <Save className="h-5 w-5"/>}
                 Enregistrer le produit
-            </button>
+            </Button>
         </div>
 
       </form>
