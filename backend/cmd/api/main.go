@@ -32,6 +32,7 @@ func main() {
 	subCategoryHandler := &handlers.SubCategoryHandler{DB: db}
 	articleHandler := &handlers.ArticleHandler{DB: db}
 	orderHandler := &handlers.OrderHandler{DB: db}
+	contactHandler := &handlers.ContactHandler{DB: db}
 
 	// --- ROUTES AUTHENTIFICATION ---
 	http.HandleFunc("/signup", enableCORS(authHandler.Signup))
@@ -152,6 +153,22 @@ func main() {
 		}
 	}))
 
+	// --- ROUTES CONTACT ---
+	http.HandleFunc("/contact", enableCORS(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "POST":
+			contactHandler.CreateMessage(w, r)
+		case "GET":
+			middleware.IsAdmin(contactHandler.GetMessages)(w, r)
+		}
+	}))
+
+	http.HandleFunc("/contact/", enableCORS(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "PATCH" && strings.HasSuffix(r.URL.Path, "/read") {
+			middleware.IsAdmin(contactHandler.MarkAsRead)(w, r)
+		}
+	}))
+
 	// --- ROUTES BLOG ---
 	http.HandleFunc("/articles", enableCORS(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
@@ -200,7 +217,7 @@ func enableCORS(next http.HandlerFunc) http.HandlerFunc {
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 		}
 
-		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, PATCH")
 		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Authorization")
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
 

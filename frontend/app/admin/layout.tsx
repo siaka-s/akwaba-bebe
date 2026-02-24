@@ -2,7 +2,9 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Package, Tag, LogOut, BookOpen, ShoppingBag, BarChart3 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { LayoutDashboard, Package, Tag, LogOut, BookOpen, ShoppingBag, BarChart3, MessageSquare } from 'lucide-react';
+import { API_URL } from '@/config';
 
 export default function AdminLayout({
   children,
@@ -10,22 +12,44 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const [unreadCount, setUnreadCount] = useState(0);
 
-  // Liste des liens du menu CORRIGÉE
+  useEffect(() => {
+    const fetchUnread = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        const res = await fetch(`${API_URL}/contact`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setUnreadCount(data.filter((m: { is_read: boolean }) => !m.is_read).length);
+        }
+      } catch {
+        // silencieux
+      }
+    };
+    fetchUnread();
+  }, [pathname]);
+
+  // Liste des liens du menu
   const menuItems = [
-    { name: 'Tableau de bord', href: '/admin', icon: BarChart3 }, // Stats
+    { name: 'Tableau de bord', href: '/admin', icon: BarChart3 },
     { name: 'Commandes', href: '/admin/orders', icon: ShoppingBag },
-    { name: 'Produits', href: '/admin/products', icon: Package }, // Liste produits
-    { name: 'Catégories', href: '/admin/categories', icon: Tag }, // Gestion catégories
-    { name: 'Astuces', href: '/admin/articles', icon: BookOpen }, // Blog
+    { name: 'Produits', href: '/admin/products', icon: Package },
+    { name: 'Catégories', href: '/admin/categories', icon: Tag },
+    { name: 'Astuces', href: '/admin/articles', icon: BookOpen },
+    { name: 'Messages', href: '/admin/messages', icon: MessageSquare },
   ];
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      
+
       {/* --- SIDEBAR (Menu Gauche) --- */}
       <aside className="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col fixed h-full z-10">
-        
+
         {/* Titre du Menu */}
         <div className="p-6 border-b border-gray-100">
           <Link href="/" className="flex items-center gap-2 group">
@@ -42,10 +66,7 @@ export default function AdminLayout({
         {/* Liens de navigation */}
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {menuItems.map((item) => {
-            // Logique active corrigée :
-            // Si c'est le lien "/admin", il est actif SEULEMENT si l'URL est exactement "/admin"
-            // Sinon, il est actif si l'URL commence par le lien (ex: /admin/products/edit/1 active Produits)
-            const isActive = item.href === '/admin' 
+            const isActive = item.href === '/admin'
               ? pathname === '/admin'
               : pathname?.startsWith(item.href);
 
@@ -60,7 +81,12 @@ export default function AdminLayout({
                 }`}
               >
                 <item.icon className={`h-5 w-5 ${isActive ? 'text-primary-600' : 'text-gray-400'}`} />
-                {item.name}
+                <span className="flex-1">{item.name}</span>
+                {item.name === 'Messages' && unreadCount > 0 && (
+                  <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-4.5 text-center">
+                    {unreadCount}
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -68,9 +94,8 @@ export default function AdminLayout({
 
         {/* Bas de page Sidebar */}
         <div className="p-4 border-t border-gray-100 bg-gray-50/50">
-          <button 
+          <button
             onClick={() => {
-                // Logique de déconnexion rapide
                 localStorage.clear();
                 window.location.href = '/login';
             }}

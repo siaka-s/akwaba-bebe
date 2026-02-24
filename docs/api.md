@@ -217,6 +217,58 @@ Upload une image et retourne son URL publique S3 à stocker dans `image_url`.
 
 ---
 
+## Sous-catégories
+
+### GET `/subcategories?category_id={id}` — Sous-catégories d'une catégorie
+
+Retourne `[]` si aucune sous-catégorie pour cette catégorie.
+
+**Réponse 200 OK :**
+```json
+[
+  { "id": 1, "name": "Tétines orthodontiques", "category_id": 3 },
+  { "id": 2, "name": "Tétines physiologiques",  "category_id": 3 }
+]
+```
+
+**Réponse 400 :** `{ "message": "Paramètre category_id requis" }`
+
+---
+
+### POST `/subcategories` — Créer une sous-catégorie `[ADMIN]`
+
+**Headers :** `Authorization: Bearer <token admin>`, `Content-Type: application/json`
+
+**Body :**
+```json
+{ "name": "Tétines orthodontiques", "category_id": 3 }
+```
+
+**Réponse 201 Created :**
+```json
+{ "id": 1, "name": "Tétines orthodontiques", "category_id": 3 }
+```
+
+---
+
+### PUT `/subcategories/update/{id}` — Modifier une sous-catégorie `[ADMIN]`
+
+**Body :** `{ "name": "Nouveau nom" }`
+
+**Réponse 200 OK :** `{ "message": "Sous-catégorie mise à jour avec succès" }`
+
+**Réponse 404 :** `{ "message": "Sous-catégorie introuvable" }`
+
+---
+
+### DELETE `/subcategories/delete/{id}` — Supprimer une sous-catégorie `[ADMIN]`
+
+**Réponse 200 OK :** `{ "message": "Sous-catégorie supprimée avec succès" }`
+
+> Les produits liés ont leur `subcategory_id` mis à `null` (ON DELETE SET NULL).
+
+---
+
 ## Catégories
 
 ### GET `/categories` — Liste des catégories
@@ -439,6 +491,66 @@ Triés par date décroissante.
 ```json
 { "id": 5, "message": "Article créé" }
 ```
+
+---
+
+## Messages de contact
+
+### POST `/contact` — Envoyer un message
+
+Accessible sans authentification. Enregistre le message et le marque `is_read = false`.
+
+**Headers :** `Content-Type: application/json`
+
+**Body :**
+```json
+{
+  "full_name": "Aminata Koné",
+  "email": "aminata@email.com",
+  "subject": "Conseil produit",
+  "message": "Bonjour, je cherche un biberon adapté..."
+}
+```
+
+**Réponse 201 Created :**
+```json
+{ "message": "Message envoyé avec succès" }
+```
+
+**Réponse 400 :** `{ "message": "Tous les champs sont requis" }`
+
+---
+
+### GET `/contact` — Liste de tous les messages `[ADMIN]`
+
+Retourne tous les messages triés par date décroissante.
+
+**Headers :** `Authorization: Bearer <token admin>`
+
+**Réponse 200 OK :**
+```json
+[
+  {
+    "id": 1,
+    "full_name": "Aminata Koné",
+    "email": "aminata@email.com",
+    "subject": "Conseil produit",
+    "message": "Bonjour, je cherche un biberon adapté...",
+    "is_read": false,
+    "created_at": "2026-02-24T10:30:00Z"
+  }
+]
+```
+
+---
+
+### PATCH `/contact/{id}/read` — Marquer comme lu `[ADMIN]`
+
+**Headers :** `Authorization: Bearer <token admin>`
+
+**Réponse 200 OK :** `{ "message": "Message marqué comme lu" }`
+
+**Réponse 404 :** `{ "message": "Message introuvable" }`
 
 ---
 
