@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Package, Calendar, Truck, ChevronRight, ShoppingBag, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
 import { API_URL } from '@/config';
 
 interface MyOrder {
@@ -34,7 +35,9 @@ export default function MyOrdersPage() {
           setOrders(data || []);
         }
       } catch (error) {
+        // Informe l'utilisateur — le console.error seul était silencieux
         console.error("Erreur chargement commandes", error);
+        toast.error("Impossible de charger vos commandes. Veuillez réessayer.");
       } finally {
         setLoading(false);
       }

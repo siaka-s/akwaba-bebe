@@ -103,9 +103,11 @@ func main() {
 	http.HandleFunc("/orders", enableCORS(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case "POST":
+			// Pas d'auth requise : un client non connecté peut passer commande
 			orderHandler.CreateOrder(w, r)
 		case "GET":
-			orderHandler.GetAllOrders(w, r)
+			// Protection admin obligatoire : liste toutes les commandes clients (données sensibles)
+			middleware.IsAdmin(orderHandler.GetAllOrders)(w, r)
 		}
 	}))
 

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"akwaba-bebe/backend/internal/config"
 	"akwaba-bebe/backend/internal/models"
 	"database/sql"
 	"encoding/json"
@@ -16,8 +17,9 @@ type OrderHandler struct {
 	DB *sql.DB
 }
 
-// ⚠️ Utilise la même clé que dans auth.go (Idéalement dans une config globale)
-var jwtKeyOrder = []byte("ma_cle_secrete_akwaba_2026")
+// jwtKeyOrder utilise la même source que auth.go via config.JWTKey().
+// La clé est lue depuis la variable d'environnement JWT_SECRET (config partagée).
+var jwtKeyOrder = config.JWTKey()
 
 // Structure pour recevoir le nouveau statut (JSON)
 type UpdateStatusRequest struct {

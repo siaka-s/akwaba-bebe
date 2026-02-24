@@ -2,7 +2,6 @@ package models
 
 import "time"
 
-// POUR LA REQUÊTE CLIENT
 // Ce que le Frontend envoie lors du checkout
 type OrderRequest struct {
 	// Infos Client

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
 import { useRouter } from 'next/navigation';
 import { MapPin, Store, Truck, User, CreditCard, Lock, Loader2, CheckCircle } from 'lucide-react';
+import { API_URL } from '@/config';
 
 export default function CheckoutPage() {
   const { items, cartTotal, clearCart } = useCart();
@@ -87,7 +88,7 @@ export default function CheckoutPage() {
     };
 
     try {
-      const res = await fetch('http://localhost:8080/orders', {
+      const res = await fetch(`${API_URL}/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderData),

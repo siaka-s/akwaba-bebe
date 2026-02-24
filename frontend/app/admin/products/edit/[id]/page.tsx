@@ -41,8 +41,9 @@ export default function EditProductPage() {
   useEffect(() => {
     const initData = async () => {
         try {
+            // Chargement parallèle des catégories et du produit à éditer
             const [resCat, resProd] = await Promise.all([
-                fetch('${API_URL}/categories'),
+                fetch(`${API_URL}/categories`),
                 fetch(`${API_URL}/products/${productId}`)
             ]);
 

@@ -5,17 +5,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings" // Nécessaire pour traiter le Token "Bearer ..."
+	"strings"
 	"time"
 
+	"akwaba-bebe/backend/internal/config"
 	"akwaba-bebe/backend/internal/models"
 
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
-// ⚠️ Clé de signature JWT (En prod : variable d'environnement)
-var jwtKey = []byte("ma_cle_secrete_akwaba_2026")
+// jwtKey est la source unique de vérité pour la clé JWT.
+// Elle est lue depuis config.JWTKey() qui lit la variable d'environnement JWT_SECRET.
+// order.go utilise la même source — ne jamais redéfinir cette variable ailleurs.
+var jwtKey = config.JWTKey()
 
 type AuthHandler struct {
 	DB *sql.DB
@@ -87,32 +90,38 @@ func (h *AuthHandler) Signup(w http.ResponseWriter, r *http.Request) {
 
 // --- 2. CONNEXION (Login) ---
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
-	var input models.LoginInput
+	// Toutes les réponses de cet endpoint sont en JSON (règle absolue du projet)
+	w.Header().Set("Content-Type", "application/json")
 
+	var input models.LoginInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "Données invalides", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Données invalides"})
 		return
 	}
 
-	// Recherche utilisateur
+	// Recherche utilisateur par email
 	var user models.User
 	sqlStatement := `SELECT id, email, password_hash, role, full_name FROM users WHERE email=$1`
 	row := h.DB.QueryRow(sqlStatement, input.Email)
 	err := row.Scan(&user.ID, &user.Email, &user.PasswordHash, &user.Role, &user.FullName)
 
+	// Message identique pour email inexistant et mauvais mot de passe (sécurité : ne pas révéler si l'email existe)
 	if err == sql.ErrNoRows {
-		http.Error(w, "Email ou mot de passe incorrect", http.StatusUnauthorized)
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Email ou mot de passe incorrect"})
 		return
 	}
 
-	// Vérification Hash Mot de passe
+	// Vérification du hash du mot de passe avec bcrypt
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(input.Password))
 	if err != nil {
-		http.Error(w, "Email ou mot de passe incorrect", http.StatusUnauthorized)
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Email ou mot de passe incorrect"})
 		return
 	}
 
-	// Création du Token JWT
+	// Création du token JWT (validité : 24 heures)
 	expirationTime := time.Now().Add(24 * time.Hour)
 	claims := &jwt.MapClaims{
 		"user_id": user.ID,
@@ -123,12 +132,12 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString(jwtKey)
 	if err != nil {
-		http.Error(w, "Erreur génération token", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Erreur lors de la génération du token"})
 		return
 	}
 
-	// Réponse JSON
-	w.Header().Set("Content-Type", "application/json")
+	// Réponse succès : token + rôle + nom complet pour le frontend
 	json.NewEncoder(w).Encode(map[string]string{
 		"token":     tokenString,
 		"role":      user.Role,
@@ -140,20 +149,22 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// 1. Validation Token
+	// Validation du token JWT — renvoie l'ID utilisateur
 	userID, err := h.validateRequestToken(r)
 	if err != nil {
-		http.Error(w, "Non autorisé", http.StatusUnauthorized)
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Non autorisé : token invalide ou absent"})
 		return
 	}
 
-	// Récupération Données BDD
+	// Récupération des données utilisateur depuis la BDD
 	var fullName, email, phone, role string
 	query := `SELECT full_name, email, phone, role FROM users WHERE id=$1`
 	err = h.DB.QueryRow(query, userID).Scan(&fullName, &email, &phone, &role)
 
 	if err != nil {
-		http.Error(w, "Utilisateur introuvable", http.StatusNotFound)
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Utilisateur introuvable"})
 		return
 	}
 
@@ -182,29 +193,32 @@ func (h *AuthHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// Validation Token
+	// Validation du token JWT — renvoie l'ID utilisateur
 	userID, err := h.validateRequestToken(r)
 	if err != nil {
-		http.Error(w, "Non autorisé", http.StatusUnauthorized)
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Non autorisé : token invalide ou absent"})
 		return
 	}
 
-	// Décodage du body
+	// Décodage du body JSON
 	var req UpdateProfileRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Données invalides", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Données invalides"})
 		return
 	}
 
-	// Recombinaison du Nom Complet (BDD attend full_name)
+	// Recombinaison du nom complet (la BDD stocke "Prénom Nom" dans full_name)
 	fullName := strings.TrimSpace(req.FirstName + " " + req.LastName)
 
-	// Mise à jour SQL
+	// Mise à jour en BDD
 	query := `UPDATE users SET full_name=$1, phone=$2 WHERE id=$3`
 	_, err = h.DB.Exec(query, fullName, req.Phone, userID)
 
 	if err != nil {
-		http.Error(w, "Erreur mise à jour BDD", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Erreur lors de la mise à jour du profil"})
 		return
 	}
 

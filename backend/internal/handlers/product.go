@@ -64,10 +64,14 @@ func (h *ProductHandler) GetProduct(w http.ResponseWriter, r *http.Request) {
 	err = row.Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.StockQuantity, &p.ImageURL, &p.CategoryID)
 
 	if err == sql.ErrNoRows {
-		http.Error(w, "Produit introuvable", http.StatusNotFound)
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Produit introuvable"})
 		return
 	} else if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		// Log interne pour le débogage — ne jamais exposer l'erreur SQL au client
+		fmt.Printf("Erreur BDD GetProduct id=%d : %v\n", id, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Erreur lors de la récupération du produit"})
 		return
 	}
 
