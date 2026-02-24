@@ -23,23 +23,20 @@ func (h *ProductHandler) GetAllProducts(w http.ResponseWriter, r *http.Request) 
 	// Sélection des champs essentiels
 	rows, err := h.DB.Query("SELECT id, name, description, price, stock_quantity, image_url, category_id FROM products ORDER BY id ASC")
 	if err != nil {
-		http.Error(w, "Erreur serveur BDD", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Erreur serveur BDD"})
 		return
 	}
 	defer rows.Close()
 
-	var products []models.Product
+	// make() garantit [] au lieu de null si pas de produits
+	products := make([]models.Product, 0)
 	for rows.Next() {
 		var p models.Product
 		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.StockQuantity, &p.ImageURL, &p.CategoryID); err != nil {
 			continue
 		}
 		products = append(products, p)
-	}
-
-	// Retourner un tableau vide [] au lieu de null si pas de produits
-	if products == nil {
-		products = []models.Product{}
 	}
 
 	json.NewEncoder(w).Encode(products)
@@ -53,7 +50,8 @@ func (h *ProductHandler) GetProduct(w http.ResponseWriter, r *http.Request) {
 	idStr := strings.TrimPrefix(r.URL.Path, "/products/")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "ID invalide", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"message": "ID invalide"})
 		return
 	}
 
@@ -84,7 +82,8 @@ func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	var p models.Product
 
 	if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
-		http.Error(w, "Données invalides", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Données invalides"})
 		return
 	}
 
@@ -96,7 +95,9 @@ func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	id := 0
 	err := h.DB.QueryRow(sqlStatement, p.Name, p.Description, p.Price, p.StockQuantity, p.ImageURL, p.CategoryID).Scan(&id)
 	if err != nil {
-		http.Error(w, "Erreur insertion BDD: "+err.Error(), http.StatusInternalServerError)
+		fmt.Printf("Erreur BDD CreateProduct : %v\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Erreur lors de la création du produit"})
 		return
 	}
 
@@ -111,30 +112,35 @@ func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	idStr := strings.TrimPrefix(r.URL.Path, "/products/")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "ID invalide", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"message": "ID invalide"})
 		return
 	}
 
 	var p models.Product
 	if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
-		http.Error(w, "Données invalides", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Données invalides"})
 		return
 	}
 
 	query := `
-        UPDATE products 
-        SET name=$1, description=$2, price=$3, stock_quantity=$4, image_url=$5, category_id=$6 
+        UPDATE products
+        SET name=$1, description=$2, price=$3, stock_quantity=$4, image_url=$5, category_id=$6
         WHERE id=$7`
 
 	res, err := h.DB.Exec(query, p.Name, p.Description, p.Price, p.StockQuantity, p.ImageURL, p.CategoryID, id)
 	if err != nil {
-		http.Error(w, "Erreur modification SQL: "+err.Error(), http.StatusInternalServerError)
+		fmt.Printf("Erreur BDD UpdateProduct id=%d : %v\n", id, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Erreur lors de la modification du produit"})
 		return
 	}
 
 	rowsAffected, _ := res.RowsAffected()
 	if rowsAffected == 0 {
-		http.Error(w, "Aucun produit trouvé avec cet ID", http.StatusNotFound)
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Aucun produit trouvé avec cet ID"})
 		return
 	}
 
@@ -154,13 +160,15 @@ func (h *ProductHandler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	idStr := strings.TrimPrefix(path, "/products/")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "ID invalide", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"message": "ID invalide"})
 		return
 	}
 
 	_, err = h.DB.Exec("DELETE FROM products WHERE id = $1", id)
 	if err != nil {
-		http.Error(w, "Erreur suppression BDD", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Erreur suppression BDD"})
 		return
 	}
 
@@ -171,13 +179,14 @@ func (h *ProductHandler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 func (h *ProductHandler) UploadImage(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// Limiter la taille du fichier (ex: 10MB)
+	// Limiter la taille du fichier (10MB)
 	r.ParseMultipartForm(10 << 20)
 
 	// Récupérer le fichier depuis le champ "file" du formulaire
 	file, handler, err := r.FormFile("file")
 	if err != nil {
-		http.Error(w, "Fichier invalide ou absent", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Fichier invalide ou absent"})
 		return
 	}
 	defer file.Close()
@@ -185,8 +194,9 @@ func (h *ProductHandler) UploadImage(w http.ResponseWriter, r *http.Request) {
 	// Appel au service utilitaire S3
 	url, err := utils.UploadToS3(file, handler)
 	if err != nil {
-		fmt.Println("Erreur S3:", err) // Log console serveur
-		http.Error(w, "Erreur lors de l'upload vers S3", http.StatusInternalServerError)
+		fmt.Printf("Erreur S3 upload : %v\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Erreur lors de l'upload vers S3"})
 		return
 	}
 
