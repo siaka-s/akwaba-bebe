@@ -2,8 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Plus, Search, Edit2, Trash2, Package, AlertCircle, X } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Package, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { API_URL } from '@/config';
 
 interface Product {
@@ -141,103 +145,95 @@ export default function AdminProductsPage() {
     return cat ? cat.name : 'Non classé';
   };
 
-  if (loading) return <div className="p-10 text-center text-gray-500">Chargement...</div>;
+  if (loading) return <div className="p-10 text-center text-muted-foreground">Chargement...</div>;
 
   return (
     <div className="max-w-6xl mx-auto pb-12">
-      
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-primary-900">Vos Produits</h1>
-        <p className="text-gray-500 text-sm mt-1">{products.length} articles en ligne</p>
+
+      <div className="flex items-start justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-primary-900">Vos Produits</h1>
+          <p className="text-muted-foreground text-sm mt-1">{products.length} articles en ligne</p>
+        </div>
+        <Button asChild>
+          <Link href="/admin/products/add">
+            <Plus className="h-4 w-4" /> Nouveau Produit
+          </Link>
+        </Button>
       </div>
 
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex items-center gap-3">
-        <Search className="h-5 w-5 text-gray-400" />
-        <input 
-          type="text" 
-          placeholder="Rechercher..." 
-          className="flex-1 outline-none text-gray-700 placeholder-gray-400"
+      <div className="relative mb-6">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Rechercher un produit..."
+          className="pl-9"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8">
-        <table className="w-full text-left border-collapse">
-          <thead className="bg-gray-50 border-b border-gray-200 text-gray-500 text-sm uppercase">
-            <tr>
-              <th className="p-4 w-20">Image</th>
-              <th className="p-4">Nom</th>
-              <th className="p-4">Catégorie</th>
-              <th className="p-4">Prix</th>
-              <th className="p-4">Stock</th>
-              <th className="p-4 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
+      <div className="rounded-xl border bg-card shadow-sm overflow-hidden mb-8">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-20">Image</TableHead>
+              <TableHead>Nom</TableHead>
+              <TableHead>Catégorie</TableHead>
+              <TableHead>Prix</TableHead>
+              <TableHead>Stock</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {filteredProducts.map((product) => (
-              <tr key={product.id} className="hover:bg-gray-50 transition-colors group">
-                <td className="p-4">
-                  <div className="h-12 w-12 bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+              <TableRow key={product.id} className="group">
+                <TableCell>
+                  <div className="h-12 w-12 bg-muted rounded-lg overflow-hidden border">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={product.image_url} alt="" className="h-full w-full object-cover" />
                   </div>
-                </td>
-                <td className="p-4 font-bold text-gray-800">{product.name}</td>
-                <td className="p-4">
-                    <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-bold">
-                        {getCategoryName(product.category_id)}
-                    </span>
-                </td>
-                <td className="p-4 font-medium text-primary-600">{product.price.toLocaleString()} F</td>
-                <td className="p-4">
-                    {product.stock_quantity > 0 ? (
-                        <span className="text-green-600 text-sm font-bold flex items-center gap-1">
-                            {product.stock_quantity} en stock
-                        </span>
-                    ) : (
-                        <span className="text-red-500 text-sm font-bold flex items-center gap-1">
-                            <AlertCircle className="h-3 w-3"/> Rupture
-                        </span>
-                    )}
-                </td>
-                <td className="p-4 text-right">
+                </TableCell>
+                <TableCell className="font-bold">{product.name}</TableCell>
+                <TableCell>
+                  <Badge variant="secondary">{getCategoryName(product.category_id)}</Badge>
+                </TableCell>
+                <TableCell className="font-medium text-primary-600">
+                  {product.price.toLocaleString()} F
+                </TableCell>
+                <TableCell>
+                  {product.stock_quantity > 0 ? (
+                    <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">
+                      {product.stock_quantity} en stock
+                    </Badge>
+                  ) : (
+                    <Badge variant="destructive" className="gap-1">
+                      <AlertCircle className="h-3 w-3" /> Rupture
+                    </Badge>
+                  )}
+                </TableCell>
+                <TableCell className="text-right">
                   <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Link 
-                        href={`/admin/products/edit/${product.id}`} 
-                        className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100" 
-                    >
+                    <Button variant="outline" size="icon" asChild>
+                      <Link href={`/admin/products/edit/${product.id}`}>
                         <Edit2 className="h-4 w-4" />
-                    </Link>
-                    {/* LE BOUTON DELETE APPELLE MAINTENANT NOTRE TOAST */}
-                    <button 
-                        onClick={() => handleDelete(product.id)} 
-                        className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100"
-                    >
-                        <Trash2 className="h-4 w-4" />
-                    </button>
+                      </Link>
+                    </Button>
+                    <Button variant="destructive" size="icon" onClick={() => handleDelete(product.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
 
         {filteredProducts.length === 0 && (
-            <div className="p-10 text-center flex flex-col items-center text-gray-500">
-                <Package className="h-12 w-12 text-gray-300 mb-2"/>
-                <p>Aucun produit trouvé.</p>
-            </div>
+          <div className="p-10 text-center flex flex-col items-center text-muted-foreground">
+            <Package className="h-12 w-12 text-muted mb-2" />
+            <p>Aucun produit trouvé.</p>
+          </div>
         )}
-      </div>
-
-      <div className="flex justify-end">
-        <Link 
-          href="/admin/products/add" 
-          className="bg-primary-600 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-primary-700 transition-colors shadow-md hover:shadow-lg"
-        >
-          <Plus className="h-5 w-5" /> Nouveau Produit
-        </Link>
       </div>
 
     </div>

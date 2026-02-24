@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import toast from "react-hot-toast";
+import { API_URL } from "@/config";
 
 interface Product {
   id: number;
@@ -35,10 +36,13 @@ export default function Home() {
   const { addToCart } = useCart();
 
   useEffect(() => {
-    fetch("http://localhost:8080/products")
+    fetch(`${API_URL}/products`)
       .then((res) => res.json())
-      .then((data) => {
-        setFeaturedProducts(data ? data.slice(0, 12) : []);
+      .then((data: Product[]) => {
+        if (!data) return setFeaturedProducts([]);
+        // Mélange aléatoire puis on prend les 12 premiers
+        const shuffled = [...data].sort(() => Math.random() - 0.5);
+        setFeaturedProducts(shuffled.slice(0, 12));
       })
       .catch((err) => console.error("Erreur fetch produits:", err))
       .finally(() => setLoading(false));
