@@ -10,9 +10,6 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Akwaba Bébé | Boutique Maman & Bébé",
   description: "Le meilleur pour votre enfant en Côte d'Ivoire",
-  icons: {
-    icon: "/logo.png",
-  },
 };
 
 export default function RootLayout({
