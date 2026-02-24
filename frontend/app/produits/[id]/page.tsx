@@ -4,10 +4,9 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { ShoppingCart, ArrowLeft, Check, Truck, ShieldCheck, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import toast from 'react-hot-toast'; // <--- IMPORT TOAST
-
-// 👇 Adaptation du chemin pour trouver le contexte
-import { useCart } from '../../../context/CartContext'; 
+import toast from 'react-hot-toast';
+import { API_URL } from '@/config';
+import { useCart } from '../../../context/CartContext';
 
 interface Product {
   id: number;
@@ -28,7 +27,7 @@ export default function ProductDetailPage() {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await fetch(`http://localhost:8080/products/${params.id}`);
+        const res = await fetch(`${API_URL}/products/${params.id}`);
         if (res.ok) {
           const data = await res.json();
           setProduct(data);
