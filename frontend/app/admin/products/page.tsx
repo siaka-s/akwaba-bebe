@@ -30,8 +30,8 @@ export default function AdminProductsPage() {
   const fetchData = async () => {
     try {
       const [resProd, resCat] = await Promise.all([
-        fetch('${API_URL}/products', { cache: 'no-store' }),
-        fetch('${API_URL}/categories', { cache: 'no-store' })
+        fetch(`${API_URL}/products`, { cache: 'no-store' }),
+        fetch(`${API_URL}/categories`, { cache: 'no-store' })
       ]);
       
       const dataProd = await resProd.json();

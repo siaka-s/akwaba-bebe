@@ -28,7 +28,7 @@ export default function EditProductPage() {
   useEffect(() => {
     const fetchData = async () => {
         // 1. Charger les catégories
-        const catRes = await fetch('${API_URL}/categories');
+        const catRes = await fetch(`${API_URL}/categories`);
         const catData = await catRes.json();
         setCategories(catData || []);
 
