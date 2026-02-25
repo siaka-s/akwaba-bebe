@@ -6,6 +6,7 @@ import { ArrowLeft, Save, Loader2, Tag } from 'lucide-react';
 import Link from 'next/link';
 import toast, { Toaster } from 'react-hot-toast'; // Ajouté
 import { API_URL } from '@/config';
+import { apiFetch } from '@/lib/apiFetch';
 
 export default function AddCategoryPage() {
   const router = useRouter();
@@ -18,7 +19,7 @@ export default function AddCategoryPage() {
     const token = localStorage.getItem('token');
 
     try {
-      const res = await fetch(`${API_URL}/categories`, {
+      const res = await apiFetch(`${API_URL}/categories`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

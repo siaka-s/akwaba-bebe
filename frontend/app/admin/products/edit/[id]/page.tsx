@@ -9,6 +9,7 @@ import { API_URL } from '@/config';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { apiFetch } from '@/lib/apiFetch';
 
 interface Category {
   id: number;
@@ -160,7 +161,7 @@ export default function EditProductPage() {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/upload`, {
+      const res = await apiFetch(`${API_URL}/upload`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: uploadData
@@ -227,7 +228,7 @@ export default function EditProductPage() {
       const token = localStorage.getItem('token');
       if (!token) { router.push('/login'); return; }
 
-      const res = await fetch(`${API_URL}/products/${productId}`, {
+      const res = await apiFetch(`${API_URL}/products/${productId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(payload)

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Eye, Package, Calendar, User, X, CheckCircle, Truck, Store, AlertCircle, Filter } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { API_URL } from '@/config';
+import { apiFetch } from '@/lib/apiFetch';
 
 // --- TYPES ---
 interface OrderItem {
@@ -40,7 +41,7 @@ export default function AdminOrdersPage() {
   const fetchOrders = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/orders`, {
+      const res = await apiFetch(`${API_URL}/orders`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -73,7 +74,7 @@ export default function AdminOrdersPage() {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/orders/${order.id}`, {
+      const res = await apiFetch(`${API_URL}/orders/${order.id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -97,7 +98,7 @@ export default function AdminOrdersPage() {
 
     const token = localStorage.getItem('token');
     try {
-        const res = await fetch(`${API_URL}/orders/update/${selectedOrder.id}`, {
+        const res = await apiFetch(`${API_URL}/orders/update/${selectedOrder.id}`, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',

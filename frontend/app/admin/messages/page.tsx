@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Mail, MailOpen, User, Clock, Tag, MessageSquare } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { API_URL } from '@/config';
+import { apiFetch } from '@/lib/apiFetch';
 
 interface ContactMessage {
   id: number;
@@ -23,7 +24,7 @@ export default function AdminMessagesPage() {
   const fetchMessages = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/contact`, {
+      const res = await apiFetch(`${API_URL}/contact`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -44,7 +45,7 @@ export default function AdminMessagesPage() {
     if (msg.is_read) return;
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/contact/${msg.id}/read`, {
+      const res = await apiFetch(`${API_URL}/contact/${msg.id}/read`, {
         method: 'PATCH',
         headers: { Authorization: `Bearer ${token}` },
       });

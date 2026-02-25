@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { User, Phone, Mail, Save, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { API_URL } from '@/config';
+import { apiFetch } from '@/lib/apiFetch';
 
 export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
@@ -24,7 +25,7 @@ export default function ProfilePage() {
       if (!token) return; // Ou redirection vers login
 
       try {
-        const res = await fetch(`${API_URL}/profile`, {
+        const res = await apiFetch(`${API_URL}/profile`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
@@ -52,7 +53,7 @@ export default function ProfilePage() {
     const token = localStorage.getItem('token');
 
     try {
-        const res = await fetch(`${API_URL}/profile`, {
+        const res = await apiFetch(`${API_URL}/profile`, {
             method: 'PUT',
             headers: { 
                 'Content-Type': 'application/json',

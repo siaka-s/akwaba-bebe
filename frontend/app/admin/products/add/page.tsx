@@ -9,6 +9,7 @@ import { API_URL } from '@/config';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { apiFetch } from '@/lib/apiFetch';
 
 // Interface pour le typage
 interface Category {
@@ -128,7 +129,7 @@ export default function AddProductPage() {
 
     try {
         const token = localStorage.getItem('token');
-        const res = await fetch(`${API_URL}/upload`, {
+        const res = await apiFetch(`${API_URL}/upload`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -190,7 +191,7 @@ export default function AddProductPage() {
             return;
         }
 
-        const res = await fetch(`${API_URL}/products`, {
+        const res = await apiFetch(`${API_URL}/products`, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',

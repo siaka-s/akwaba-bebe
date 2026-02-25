@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { LayoutDashboard, Package, Tag, LogOut, BookOpen, ShoppingBag, BarChart3, MessageSquare } from 'lucide-react';
 import { API_URL } from '@/config';
+import { apiFetch } from '@/lib/apiFetch';
 
 export default function AdminLayout({
   children,
@@ -19,7 +20,7 @@ export default function AdminLayout({
       try {
         const token = localStorage.getItem('token');
         if (!token) return;
-        const res = await fetch(`${API_URL}/contact`, {
+        const res = await apiFetch(`${API_URL}/contact`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) return;

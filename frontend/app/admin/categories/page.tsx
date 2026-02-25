@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { apiFetch } from '@/lib/apiFetch';
 
 interface Category {
   id: number;
@@ -103,7 +104,7 @@ export default function AdminCategoriesPage() {
     if (!token) { toast.error("Session expirée"); return; }
 
     try {
-      const res = await fetch(`${API_URL}/categories`, {
+      const res = await apiFetch(`${API_URL}/categories`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ name: newCatName }),
@@ -137,7 +138,7 @@ export default function AdminCategoriesPage() {
     const token = localStorage.getItem('token');
     if (!token) return;
     try {
-      const res = await fetch(`${API_URL}/categories/delete/${id}`, {
+      const res = await apiFetch(`${API_URL}/categories/delete/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -153,7 +154,7 @@ export default function AdminCategoriesPage() {
     if (!editingId || !editName.trim()) return;
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`${API_URL}/categories/update/${editingId}`, {
+      const res = await apiFetch(`${API_URL}/categories/update/${editingId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ name: editName }),
@@ -172,7 +173,7 @@ export default function AdminCategoriesPage() {
     if (!token) { toast.error("Session expirée"); return; }
 
     try {
-      const res = await fetch(`${API_URL}/subcategories`, {
+      const res = await apiFetch(`${API_URL}/subcategories`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ name, category_id: catId }),
@@ -194,7 +195,7 @@ export default function AdminCategoriesPage() {
     if (!editingSubcatId || !editSubcatName.trim()) return;
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`${API_URL}/subcategories/update/${editingSubcatId}`, {
+      const res = await apiFetch(`${API_URL}/subcategories/update/${editingSubcatId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ name: editSubcatName }),
@@ -221,7 +222,7 @@ export default function AdminCategoriesPage() {
     const token = localStorage.getItem('token');
     if (!token) return;
     try {
-      const res = await fetch(`${API_URL}/subcategories/delete/${sc.id}`, {
+      const res = await apiFetch(`${API_URL}/subcategories/delete/${sc.id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });

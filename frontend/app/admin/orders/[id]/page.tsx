@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, User, Phone, MapPin, Truck, Calendar, ShoppingBag, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { API_URL } from '@/config';
+import { apiFetch } from '@/lib/apiFetch';
 
 interface OrderDetail {
   id: number;
@@ -56,7 +57,7 @@ export default function OrderDetailPage() {
     const token = localStorage.getItem('token'); // Nécessaire car protégé par IsAdmin
 
     try {
-        const res = await fetch(`${API_URL}/orders/update/${params.id}`, {
+        const res = await apiFetch(`${API_URL}/orders/update/${params.id}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

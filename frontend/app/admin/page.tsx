@@ -15,6 +15,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import Link from "next/link";
+import { apiFetch } from '@/lib/apiFetch';
 
 // TYPES ALIGNÉS SUR TON BACKEND (Handler Go)
 interface Order {
@@ -32,7 +33,7 @@ export default function AdminDashboard() {
     const fetchStats = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch(`${API_URL}/orders`, {
+        const res = await apiFetch(`${API_URL}/orders`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 

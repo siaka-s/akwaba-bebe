@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { API_URL } from '@/config';
+import { apiFetch } from '@/lib/apiFetch';
 
 interface Product {
   id: number;
@@ -116,7 +117,7 @@ export default function AdminProductsPage() {
     const toastId = toast.loading("Suppression en cours...");
 
     try {
-      const res = await fetch(`${API_URL}/products/delete/${id}`, {
+      const res = await apiFetch(`${API_URL}/products/delete/${id}`, {
         method: 'DELETE',
         headers: {
             'Authorization': `Bearer ${token}`

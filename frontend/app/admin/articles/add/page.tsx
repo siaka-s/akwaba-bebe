@@ -6,6 +6,7 @@ import { ArrowLeft, Save, Loader2, Upload, Trash2, Check } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { API_URL } from '@/config';
+import { apiFetch } from '@/lib/apiFetch';
 
 export default function AddArticlePage() {
   const router = useRouter();
@@ -34,7 +35,7 @@ export default function AddArticlePage() {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/upload`, {
+      const res = await apiFetch(`${API_URL}/upload`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: uploadData
@@ -66,7 +67,7 @@ export default function AddArticlePage() {
     const token = localStorage.getItem('token');
 
     try {
-      const res = await fetch(`${API_URL}/articles`, {
+      const res = await apiFetch(`${API_URL}/articles`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

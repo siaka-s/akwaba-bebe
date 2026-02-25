@@ -5,6 +5,7 @@ import { Package, Calendar, Truck, ChevronRight, ShoppingBag, Loader2 } from 'lu
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { API_URL } from '@/config';
+import { apiFetch } from '@/lib/apiFetch';
 
 interface MyOrder {
   id: number;
@@ -27,7 +28,7 @@ export default function MyOrdersPage() {
       }
 
       try {
-        const res = await fetch(`${API_URL}/my-orders`, {
+        const res = await apiFetch(`${API_URL}/my-orders`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
