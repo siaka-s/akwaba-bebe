@@ -23,6 +23,7 @@ interface SubCategory {
 interface Product {
   id: number;
   category_id: number;
+  subcategory_id: number | null;
 }
 
 export default function AdminCategoriesPage() {
@@ -93,6 +94,7 @@ export default function AdminCategoriesPage() {
 
   const getProductCount = (catId: number) => products.filter(p => p.category_id === catId).length;
   const getSubcatCount = (catId: number) => subcategoriesByCat[catId]?.length ?? '…';
+  const getSubcatProductCount = (subcatId: number) => products.filter(p => p.subcategory_id === subcatId).length;
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -363,7 +365,12 @@ export default function AdminCategoriesPage() {
                                     </>
                                   ) : (
                                     <>
-                                      <span className="text-sm text-gray-700 flex-1">{sc.name}</span>
+                                      <span className="text-sm text-gray-700 flex-1">
+                                        {sc.name}
+                                        <span className="ml-2 text-xs text-muted-foreground font-normal">
+                                          ( {getSubcatProductCount(sc.id)} )
+                                        </span>
+                                      </span>
                                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEditSubcat(sc)}><Edit2 className="h-3 w-3"/></Button>
                                         <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50" onClick={() => handleDeleteSubcat(sc)}><Trash2 className="h-3 w-3"/></Button>
