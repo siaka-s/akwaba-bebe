@@ -107,11 +107,11 @@ export default function ProductsPage() {
     );
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
+    <div className="bg-white lg:h-[calc(100vh-73px)] lg:flex lg:flex-col">
+      <div className="max-w-screen-2xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-8 lg:flex lg:flex-col lg:flex-1 lg:overflow-hidden">
+
         {/* --- RECHERCHE --- */}
-        <div className="bg-gray-50 p-1 rounded-2xl mb-8 flex items-center text-center gap-3 border border-gray-100 max-w-">
+        <div className="bg-gray-50 p-1 rounded-2xl mb-6 flex items-center gap-3 border border-gray-100 shrink-0">
           <Search className="h-5 w-5 text-gray-400 ml-2" />
           <input
             type="text"
@@ -122,7 +122,7 @@ export default function ProductsPage() {
           />
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8 relative">
+        <div className="flex flex-col lg:flex-row gap-8 lg:flex-1 lg:overflow-hidden pb-8">
           {/* BOUTON FILTRE MOBILE */}
           <button
             onClick={() => setIsMobileMenuOpen(true)}
@@ -217,7 +217,7 @@ export default function ProductsPage() {
           </aside>
 
           {/* --- GRILLE PRODUITS (ALIGNÉE SUR L'ACCUEIL) --- */}
-          <div className="flex-1">
+          <div className="flex-1 lg:overflow-y-auto lg:pr-1">
             {filteredProducts.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
                 {filteredProducts.map((product) => (
