@@ -66,7 +66,7 @@ export default function Home() {
     <div className="min-h-screen bg-white w-full">
       {/* --- 1. HERO SECTION --- */}
       {showHero && (
-        <section className="relative bg-primary-50 pt-8 pb-2 px-4 animate-in fade-in duration-700">
+        <section className="relative bg-primary-50 pt-8 pb-8 px-4 animate-in fade-in duration-700">
           <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8 px-4 sm:px-6 relative z-10">
             {/* BLOC 1 : TITRE */}
             <div className="flex-1 flex justify-center text-center">
@@ -109,7 +109,7 @@ export default function Home() {
             </div>
 
             {/* BLOC 3 : IMAGES HERO */}
-            <div className="flex-1 flex gap-4 justify-center md:justify-end items-center mt-6 md:mt-0">
+            <div className="hidden md:flex flex-1 gap-4 justify-center md:justify-end items-center mt-6 md:mt-0">
               <div className="relative w-32 md:w-44 aspect-3/4 mt-8 transform -rotate-2 hover:rotate-0 transition-all duration-500">
                 <img
                   src="https://akwaba-bebe-images.s3.eu-west-3.amazonaws.com/products/1770909267101251000.jpeg"
@@ -164,25 +164,25 @@ export default function Home() {
                   className="group bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col h-full hover:-translate-y-1 border-none"
                 >
                   <Link href={`/produits/${product.id}`} className="grow">
-                    <div className="relative h-44 md:h-48 bg-white flex items-center justify-center p-2 overflow-hidden">
+                    <div className="relative h-44 md:h-48 bg-white overflow-hidden">
                       <img
                         src={product.image_url}
                         alt={product.name}
-                        className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-500"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                     </div>
 
-                    <div className="px-3 pt-1 pb-2 relative z-10 bg-white">
-                      <h3 className="font-bold text-gray-900 mb-4 text-sm leading-tight line-clamp-1 group-hover:text-primary-600">
+                    <div className="px-3 pt-2 pb-2 relative z-10 bg-white">
+                      <h3 className="font-semibold text-gray-900 mb-1.5 text-sm leading-snug tracking-tight line-clamp-2 group-hover:text-primary-600">
                         {product.name}
                       </h3>
 
-                      <p className="text-[11px] text-gray-400 mb-1 leading-tight text-justify line-clamp-2">
+                      <p className="text-xs text-gray-500 mb-2 leading-relaxed line-clamp-2">
                         {product.description || "Un indispensable pour bébé."}
                       </p>
 
                       <div className="mb-0">
-                        <span className="text-[10px] font-bold text-primary-600 hover:text-primary-800 cursor-pointer">
+                        <span className="text-xs font-medium text-primary-600 hover:text-primary-700 cursor-pointer">
                           En savoir plus
                         </span>
                       </div>

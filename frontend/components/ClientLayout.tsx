@@ -20,7 +20,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       
       {/* AJOUT : La balise main prend toute la largeur disponible (w-full) 
           et pousse le footer vers le bas (flex-grow) */}
-      <main className=" w-full">
+      <main className="w-full pt-[73px]">
         {children}
       </main>
       

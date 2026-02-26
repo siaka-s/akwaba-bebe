@@ -85,12 +85,12 @@ export default function ProductDetailPage() {
                     - h-[400px] mobile / h-[600px] desktop pour donner de l'espace
                     - p-8 padding généreux pour que l'image respire
                 */}
-                <div className="bg-white h-[400px] lg:h-[600px] flex items-center justify-center p-8 border-b lg:border-b-0 lg:border-r border-gray-100 relative group">
+                <div className="bg-white h-[400px] lg:h-[600px] overflow-hidden border-b lg:border-b-0 lg:border-r border-gray-100 relative group">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img 
-                        src={product.image_url} 
-                        alt={product.name} 
-                        className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
+                    <img
+                        src={product.image_url}
+                        alt={product.name}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                 </div>
 
@@ -100,7 +100,7 @@ export default function ProductDetailPage() {
                     {/* Badge Catégorie (Optionnel, statique pour l'instant) */}
                     <span className="text-sm font-bold text-secondary-500 uppercase tracking-wider mb-2">Akwaba Bébé</span>
 
-                    <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4 leading-tight">
+                    <h1 className="text-2xl md:text-4xl font-bold text-gray-900 mb-4 leading-tight tracking-tight">
                         {product.name}
                     </h1>
 
@@ -117,7 +117,7 @@ export default function ProductDetailPage() {
                         )}
                     </div>
 
-                    <div className="prose text-gray-600 mb-8 leading-relaxed">
+                    <div className="text-base text-gray-600 mb-8 leading-relaxed">
                         <p>{product.description}</p>
                     </div>
                     

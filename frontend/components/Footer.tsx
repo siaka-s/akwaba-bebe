@@ -4,9 +4,9 @@ import Link from 'next/link';
 export default function Footer() {
   return (
     // Changement ici : bg-primary-50 (fond très clair) au lieu de bg-primary-900
-    <footer className="bg-primary-50 text-gray-600 pt-16 pb-8 border-t border-primary-100">
+    <footer className="bg-primary-50 text-gray-600 pt-0 md:pt-16 pb-8 border-t border-primary-100">
       <div className="container mx-auto px-4">
-        <div className="grid md:grid-cols-4 gap-12 mb-12">
+        <div className="hidden md:grid md:grid-cols-4 gap-12 mb-12">
           
           {/* Colonne 1 : Marque */}
           <div className="md:col-span-2 space-y-6">
@@ -67,9 +67,9 @@ export default function Footer() {
         </div>
 
         {/* Copyright */}
-        <div className="border-t border-primary-200 pt-8 text-center text-sm text-gray-500">
+        <div className="md:border-t border-primary-200 pt-4 md:pt-8 text-center text-sm text-gray-500">
           <p>
-            © {new Date().getFullYear()} Akwaba Bébé. Fait avec <Heart className="h-3 w-3 inline text-red-500 mx-1 fill-red-500" />.
+            © {new Date().getFullYear()} Akwaba Bébé.
           </p>
         </div>
       </div>

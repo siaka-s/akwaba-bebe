@@ -227,26 +227,25 @@ export default function ProductsPage() {
                   >
                     <Link href={`/produits/${product.id}`} className="grow">
                       {/* Image : Taille réduite (h-44) */}
-                      <div className="relative h-44 md:h-48 bg-white flex items-center justify-center p-2 overflow-hidden">
+                      <div className="relative h-44 md:h-48 bg-white overflow-hidden">
                         <img
                           src={product.image_url}
                           alt={product.name}
-                          className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-500"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                       </div>
 
-                      <div className="px-3 pt-1 pb-2 relative z-10 bg-white">
-                        <h3 className="font-bold text-gray-900 mb-4 text-sm leading-tight line-clamp-1 group-hover:text-primary-600">
+                      <div className="px-3 pt-2 pb-2 relative z-10 bg-white">
+                        <h3 className="font-semibold text-gray-900 mb-1.5 text-sm leading-snug tracking-tight line-clamp-2 group-hover:text-primary-600">
                           {product.name}
                         </h3>
 
-                        {/* Description : Justifiée, 3 lignes max */}
-                        <p className="text-[11px] text-gray-400 mb-1 leading-tight text-justify line-clamp-2">
+                        <p className="text-xs text-gray-500 mb-2 leading-relaxed line-clamp-2">
                           {product.description || "Un indispensable pour bébé."}
                         </p>
 
                         <div className="mb-0">
-                          <span className="text-[10px] font-bold text-primary-600 hover:text-primary-800 cursor-pointer">
+                          <span className="text-xs font-medium text-primary-600 hover:text-primary-700 cursor-pointer">
                             En savoir plus
                           </span>
                         </div>
