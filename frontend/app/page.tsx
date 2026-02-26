@@ -89,10 +89,10 @@ export default function Home() {
       {/* --- 1. HERO SECTION --- */}
       {showHero && (
         <section className="relative bg-primary-50 pt-3 pb-3 px-4 animate-in fade-in duration-700 overflow-hidden">
-          {/* Blobs décoratifs floutés */}
-          <div className="absolute -top-10 left-[15%] w-72 h-72 bg-primary-300/30 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-10 right-[15%] w-64 h-64 bg-secondary-300/20 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-primary-200/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+          {/* Blobs décoratifs floutés animés */}
+          <div className="absolute -top-10 left-[15%] w-72 h-72 bg-primary-300/30 rounded-full blur-3xl pointer-events-none animate-pulse [animation-duration:3s]" />
+          <div className="absolute -bottom-10 right-[15%] w-64 h-64 bg-secondary-300/20 rounded-full blur-3xl pointer-events-none animate-pulse [animation-duration:4s] [animation-delay:1s]" />
+          <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-primary-200/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none animate-pulse [animation-duration:5s] [animation-delay:2s]" />
 
           <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 px-4 sm:px-6 relative z-10">
 

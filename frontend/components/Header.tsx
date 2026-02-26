@@ -22,7 +22,8 @@ export default function Header() {
   
   // États des Menus
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // Ajout pour le mobile
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAstucesMenuOpen, setIsAstucesMenuOpen] = useState(false);
 
   useEffect(() => {
     // Vérif localStorage au chargement et changement de page
@@ -66,11 +67,31 @@ export default function Header() {
           
           {/* --- NAVIGATION PRINCIPALE (Desktop) --- */}
           {!isAdminPage && (
-            <nav className="hidden md:flex flex-1 justify-evenly mx-6 lg:mx-10">
+            <nav className="hidden md:flex flex-1 justify-evenly mx-6 lg:mx-10 items-center">
               <Link href="/" className="text-gray-600 hover:text-primary-600 font-medium transition-colors whitespace-nowrap">Accueil</Link>
               <Link href="/produits" className="text-gray-600 hover:text-primary-600 font-medium transition-colors whitespace-nowrap">Produits</Link>
-              <Link href="/notre-histoire" className="text-gray-600 hover:text-primary-600 font-medium transition-colors whitespace-nowrap">Notre histoire</Link>
-              <Link href="/astuces" className="text-gray-600 hover:text-primary-600 font-medium transition-colors whitespace-nowrap">Astuces</Link>
+              <Link href="/nos-services" className="text-gray-600 hover:text-primary-600 font-medium transition-colors whitespace-nowrap">Nos services</Link>
+
+              {/* Dropdown Astuces */}
+              <div className="relative" onMouseEnter={() => setIsAstucesMenuOpen(true)} onMouseLeave={() => setIsAstucesMenuOpen(false)}>
+                <button className="flex items-center gap-1 text-gray-600 hover:text-primary-600 font-medium transition-colors whitespace-nowrap">
+                  Astuces
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${isAstucesMenuOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {isAstucesMenuOpen && (
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-44 bg-white rounded-xl shadow-xl border border-gray-100 z-50 animate-in fade-in zoom-in-95 duration-150">
+                    <div className="py-1.5">
+                      <Link href="/astuces" className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors">
+                        Astuces & conseils
+                      </Link>
+                      <Link href="/notre-histoire" className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors">
+                        Notre histoire
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <Link href="/contact" className="text-gray-600 hover:text-primary-600 font-medium transition-colors whitespace-nowrap">Contact</Link>
             </nav>
           )}
@@ -176,8 +197,9 @@ export default function Header() {
           <div className="md:hidden mt-4 pt-4 border-t border-gray-100 space-y-3 animate-in slide-in-from-top-5">
             <Link href="/" className="block py-2 text-gray-700 font-medium">Accueil</Link>
             <Link href="/produits" className="block py-2 text-gray-700 font-medium">Produits</Link>
-            <Link href="/notre-histoire" className="block py-2 text-gray-700 font-medium">Notre histoire</Link>
+            <Link href="/nos-services" className="block py-2 text-gray-700 font-medium">Nos services</Link>
             <Link href="/astuces" className="block py-2 text-gray-700 font-medium">Astuces</Link>
+            <Link href="/notre-histoire" className="block py-2 text-gray-600 pl-4 text-sm border-l-2 border-primary-200">Notre histoire</Link>
             <Link href="/contact" className="block py-2 text-gray-700 font-medium">Contact</Link>
             
             <div className="border-t border-gray-100 my-2 pt-2">
