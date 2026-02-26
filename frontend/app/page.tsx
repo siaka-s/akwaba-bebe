@@ -30,21 +30,43 @@ interface Product {
 
 export default function Home() {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [heroImages, setHeroImages] = useState<Product[]>([]);   // BLOC 3 : allaitement
+  const [heroImages2, setHeroImages2] = useState<Product[]>([]); // BLOC 1 : box
   const [loading, setLoading] = useState(true);
   const [showHero, setShowHero] = useState(true);
 
   const { addToCart } = useCart();
 
   useEffect(() => {
-    fetch(`${API_URL}/products`)
-      .then((res) => res.json())
-      .then((data: Product[]) => {
+    Promise.all([
+      fetch(`${API_URL}/products`).then((r) => r.json()),
+      fetch(`${API_URL}/categories`).then((r) => r.json()),
+    ])
+      .then(([data, cats]: [Product[], { id: number; name: string }[]]) => {
         if (!data) return setFeaturedProducts([]);
-        // Mélange aléatoire puis on prend les 12 premiers
-        const shuffled = [...data].sort(() => Math.random() - 0.5);
-        setFeaturedProducts(shuffled.slice(0, 12));
+
+        const shuffle = (arr: Product[]) => [...arr].sort(() => Math.random() - 0.5);
+
+        // Trouver les catégories cibles
+        const boxCat = cats?.find((c) => c.name.toLowerCase().includes('box'));
+        const allaitCat = cats?.find((c) => c.name.toLowerCase().includes('allait'));
+
+        // BLOC 1 gauche : priorité "box"
+        const boxPool = boxCat ? data.filter((p) => p.category_id === boxCat.id) : [];
+        const left = boxPool.length >= 2 ? shuffle(boxPool).slice(0, 2) : shuffle(data).slice(0, 2);
+        setHeroImages2(left);
+
+        // BLOC 3 droit : priorité "allaitement", jamais les mêmes que BLOC 1
+        const leftIds = new Set(left.map((p) => p.id));
+        const allaitPool = allaitCat ? data.filter((p) => p.category_id === allaitCat.id && !leftIds.has(p.id)) : [];
+        const right = allaitPool.length >= 2 ? shuffle(allaitPool).slice(0, 2) : shuffle(data).filter((p) => !leftIds.has(p.id)).slice(0, 2);
+        setHeroImages(right);
+
+        // Grille : exclure les 4 images hero
+        const allHeroIds = new Set([...left, ...right].map((p) => p.id));
+        setFeaturedProducts(shuffle(data).filter((p) => !allHeroIds.has(p.id)).slice(0, 24));
       })
-      .catch((err) => console.error("Erreur fetch produits:", err))
+      .catch((err) => console.error("Erreur fetch:", err))
       .finally(() => setLoading(false));
   }, []);
 
@@ -66,20 +88,74 @@ export default function Home() {
     <div className="min-h-screen bg-white w-full">
       {/* --- 1. HERO SECTION --- */}
       {showHero && (
-        <section className="relative bg-primary-50 pt-8 pb-8 px-4 animate-in fade-in duration-700">
-          <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8 px-4 sm:px-6 relative z-10">
-            {/* BLOC 1 : TITRE */}
-            <div className="flex-1 flex justify-center text-center">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-primary-900 leading-tight">
-                <span className="text-secondary-500 text-center">
-                  Votre expert maternité
-                </span>
-              </h1>
-            </div>
+        <section className="relative bg-primary-50 pt-3 pb-3 px-4 animate-in fade-in duration-700 overflow-hidden">
+          {/* Blobs décoratifs floutés */}
+          <div className="absolute -top-10 left-[15%] w-72 h-72 bg-primary-300/30 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-10 right-[15%] w-64 h-64 bg-secondary-300/20 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-primary-200/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+
+          <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 px-4 sm:px-6 relative z-10">
+
+            {/* BLOC 1 : IMAGES HERO (box) */}
+            {heroImages2.length >= 2 && (
+              <div className="hidden md:flex flex-1 gap-4 justify-center items-center mt-6 md:mt-0">
+                <Link href={`/produits/${heroImages2[0].id}`} className="group/img relative w-40 md:w-52 aspect-3/4 mb-8 transform rotate-2 hover:rotate-0 transition-all duration-500 block">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={heroImages2[0].image_url}
+                    alt={heroImages2[0].name}
+                    className="rounded-2xl shadow-xl object-cover w-full h-full border-4 border-white"
+                  />
+                  <button
+                    onClick={(e) => handleAddToCart(e, heroImages2[0])}
+                    className="absolute top-3 right-3 bg-white/90 hover:bg-primary-600 text-primary-600 hover:text-white p-1.5 rounded-full shadow-md transition-all duration-200 active:scale-90 z-10"
+                  >
+                    <ShoppingCart className="h-3 w-3" />
+                  </button>
+                  <div className="absolute inset-0 rounded-2xl bg-linear-to-t from-primary-900/55 via-primary-700/10 to-transparent flex items-end p-3">
+                    <div className="w-full">
+                      <span className="text-white text-xs font-bold leading-snug line-clamp-1 block">
+                        <span className="text-secondary-300">{heroImages2[0].name.split(' ')[0]}</span>{' '}
+                        {heroImages2[0].name.split(' ').slice(1).join(' ')}
+                      </span>
+                      <p className="text-white/90 text-[10px] leading-relaxed line-clamp-4 mt-1.5 pb-1 max-h-0 overflow-hidden group-hover/img:max-h-24 transition-all duration-300">
+                        {heroImages2[0].description}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+
+                <Link href={`/produits/${heroImages2[1].id}`} className="group/img relative w-40 md:w-52 aspect-3/4 mt-8 transform -rotate-2 hover:rotate-0 transition-all duration-500 block">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={heroImages2[1].image_url}
+                    alt={heroImages2[1].name}
+                    className="rounded-2xl shadow-xl object-cover w-full h-full border-4 border-white"
+                  />
+                  <button
+                    onClick={(e) => handleAddToCart(e, heroImages2[1])}
+                    className="absolute top-3 right-3 bg-white/90 hover:bg-primary-600 text-primary-600 hover:text-white p-1.5 rounded-full shadow-md transition-all duration-200 active:scale-90 z-10"
+                  >
+                    <ShoppingCart className="h-3 w-3" />
+                  </button>
+                  <div className="absolute inset-0 rounded-2xl bg-linear-to-t from-primary-900/55 via-primary-700/10 to-transparent flex items-end p-3">
+                    <div className="w-full">
+                      <span className="text-white text-xs font-bold leading-snug line-clamp-1 block">
+                        <span className="text-secondary-300">{heroImages2[1].name.split(' ')[0]}</span>{' '}
+                        {heroImages2[1].name.split(' ').slice(1).join(' ')}
+                      </span>
+                      <p className="text-white/90 text-[10px] leading-relaxed line-clamp-4 mt-1.5 pb-1 max-h-0 overflow-hidden group-hover/img:max-h-24 transition-all duration-300">
+                        {heroImages2[1].description}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+              </div>
+            )}
 
             {/* BLOC 2 : DÉTAILS & ACTIONS */}
-            <div className="flex-1 flex flex-col items-center text-center space-y-6">
-              <div className="inline-flex flex-wrap justify-center gap-3 text-xs font-bold text-secondary-500 uppercase tracking-wide bg-white/60 px-4 py-2 rounded-full border border-primary-100">
+            <div className="flex-[0.5] flex flex-col items-center text-center space-y-10">
+              <div className="inline-flex flex-nowrap justify-center gap-3 text-xs font-bold text-secondary-500 uppercase tracking-wide bg-white/60 px-4 py-2 rounded-full border border-primary-100 whitespace-nowrap">
                 <span className="flex items-center gap-1">
                   <Gift className="h-3 w-3" /> Cadeaux
                 </span>
@@ -93,11 +169,6 @@ export default function Home() {
                 </span>
               </div>
 
-              <p className="text-gray-600 text-lg max-w-sm leading-relaxed">
-                Nous accompagnons vos premiers moments de bonheur en toute
-                sérénité
-              </p>
-
               <div>
                 <Link
                   href="/produits"
@@ -108,24 +179,62 @@ export default function Home() {
               </div>
             </div>
 
-            {/* BLOC 3 : IMAGES HERO */}
-            <div className="hidden md:flex flex-1 gap-4 justify-center md:justify-end items-center mt-6 md:mt-0">
-              <div className="relative w-32 md:w-44 aspect-3/4 mt-8 transform -rotate-2 hover:rotate-0 transition-all duration-500">
-                <img
-                  src="https://akwaba-bebe-images.s3.eu-west-3.amazonaws.com/products/1770909267101251000.jpeg"
-                  alt="Maman et bébé joyeux"
-                  className="rounded-2xl shadow-xl object-cover w-full h-full border-4 border-white"
-                />
-              </div>
+            {/* BLOC 3 : IMAGES HERO (allaitement) */}
+            {heroImages.length >= 2 && (
+              <div className="hidden md:flex flex-1 gap-4 justify-center items-center mt-6 md:mt-0">
+                <Link href={`/produits/${heroImages[0].id}`} className="group/img relative w-40 md:w-52 aspect-3/4 mt-8 transform -rotate-2 hover:rotate-0 transition-all duration-500 block">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={heroImages[0].image_url}
+                    alt={heroImages[0].name}
+                    className="rounded-2xl shadow-xl object-cover w-full h-full border-4 border-white"
+                  />
+                  <button
+                    onClick={(e) => handleAddToCart(e, heroImages[0])}
+                    className="absolute top-3 left-3 bg-white/90 hover:bg-primary-600 text-primary-600 hover:text-white p-1.5 rounded-full shadow-md transition-all duration-200 active:scale-90 z-10"
+                  >
+                    <ShoppingCart className="h-3 w-3" />
+                  </button>
+                  <div className="absolute inset-0 rounded-2xl bg-linear-to-t from-primary-900/55 via-primary-700/10 to-transparent flex items-end p-3">
+                    <div className="w-full">
+                      <span className="text-white text-xs font-bold leading-snug line-clamp-1 block">
+                        <span className="text-secondary-300">{heroImages[0].name.split(' ')[0]}</span>{' '}
+                        {heroImages[0].name.split(' ').slice(1).join(' ')}
+                      </span>
+                      <p className="text-white/90 text-[10px] leading-relaxed line-clamp-4 mt-1.5 pb-1 max-h-0 overflow-hidden group-hover/img:max-h-24 transition-all duration-300">
+                        {heroImages[0].description}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
 
-              <div className="relative w-32 md:w-44 aspect-3/] mb-8 transform rotate-2 hover:rotate-0 transition-all duration-500">
-                <img
-                  src="https://akwaba-bebe-images.s3.eu-west-3.amazonaws.com/products/1770909858258004000.jpeg"
-                  alt="Bébé souriant"
-                  className="rounded-2xl shadow-xl object-cover w-full h-full border-4 border-white"
-                />
+                <Link href={`/produits/${heroImages[1].id}`} className="group/img relative w-40 md:w-52 aspect-3/4 mb-8 transform rotate-2 hover:rotate-0 transition-all duration-500 block">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={heroImages[1].image_url}
+                    alt={heroImages[1].name}
+                    className="rounded-2xl shadow-xl object-cover w-full h-full border-4 border-white"
+                  />
+                  <button
+                    onClick={(e) => handleAddToCart(e, heroImages[1])}
+                    className="absolute top-3 left-3 bg-white/90 hover:bg-primary-600 text-primary-600 hover:text-white p-1.5 rounded-full shadow-md transition-all duration-200 active:scale-90 z-10"
+                  >
+                    <ShoppingCart className="h-3 w-3" />
+                  </button>
+                  <div className="absolute inset-0 rounded-2xl bg-linear-to-t from-primary-900/55 via-primary-700/10 to-transparent flex items-end p-3">
+                    <div className="w-full">
+                      <span className="text-white text-xs font-bold leading-snug line-clamp-1 block">
+                        <span className="text-secondary-300">{heroImages[1].name.split(' ')[0]}</span>{' '}
+                        {heroImages[1].name.split(' ').slice(1).join(' ')}
+                      </span>
+                      <p className="text-white/90 text-[10px] leading-relaxed line-clamp-4 mt-1.5 pb-1 max-h-0 overflow-hidden group-hover/img:max-h-24 transition-all duration-300">
+                        {heroImages[1].description}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
               </div>
-            </div>
+            )}
           </div>
 
           {/* --- BORDURE BASSE ANIMÉE EN VERT --- */}
@@ -157,7 +266,7 @@ export default function Home() {
               <Loader2 className="animate-spin h-8 w-8 text-primary-600" />
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-4 md:gap-5">
               {featuredProducts.map((product) => (
                 <div
                   key={product.id}
@@ -172,32 +281,34 @@ export default function Home() {
                       />
                     </div>
 
-                    <div className="px-3 pt-2 pb-2 relative z-10 bg-white">
-                      <h3 className="font-semibold text-gray-900 mb-1.5 text-sm leading-snug tracking-tight line-clamp-2 group-hover:text-primary-600">
+                    <div className="px-3 pt-3 pb-2 relative z-10 bg-white flex flex-col gap-1.5">
+                      <h3 className="font-semibold text-gray-900 text-[11px] leading-snug tracking-tight truncate pr-2 group-hover:text-primary-600">
                         {product.name}
                       </h3>
 
-                      <p className="text-xs text-gray-500 mb-2 leading-relaxed line-clamp-2">
-                        {product.description || "Un indispensable pour bébé."}
-                      </p>
+                      <div className="hidden md:block">
+                        <p className="text-[10px] text-gray-500 leading-relaxed line-clamp-1 pr-2">
+                          {product.description || "Un indispensable pour bébé."}
+                        </p>
+                      </div>
 
-                      <div className="mb-0">
-                        <span className="text-xs font-medium text-primary-600 hover:text-primary-700 cursor-pointer">
+                      <div className="hidden md:block">
+                        <span className="text-[10px] font-medium text-primary-600 hover:text-primary-700 cursor-pointer">
                           En savoir plus
                         </span>
                       </div>
                     </div>
                   </Link>
 
-                  <div className="px-3 pb-3 mt-auto flex items-center justify-between pt-1 border-t border-gray-50 bg-white">
-                    <span className="font-bold text-gray-900 text-sm">
+                  <div className="px-2 pb-2 mt-auto flex items-center justify-between pt-1 border-t border-gray-50 bg-white">
+                    <span className="font-bold text-gray-900 text-[11px]">
                       {product.price.toLocaleString()} F
                     </span>
                     <button
                       onClick={(e) => handleAddToCart(e, product)}
-                      className="bg-gray-50 p-1.5 rounded-full text-gray-400 hover:bg-primary-600 hover:text-white transition-all shadow-sm active:scale-90"
+                      className="bg-gray-50 p-1 rounded-full text-gray-400 hover:bg-primary-600 hover:text-white transition-all shadow-sm active:scale-90"
                     >
-                      <ShoppingCart className="h-3.5 w-3.5" />
+                      <ShoppingCart className="h-3 w-3" />
                     </button>
                   </div>
                 </div>

@@ -219,7 +219,7 @@ export default function ProductsPage() {
           {/* --- GRILLE PRODUITS (ALIGNÉE SUR L'ACCUEIL) --- */}
           <div className="flex-1 lg:overflow-y-auto lg:pr-1">
             {filteredProducts.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-5">
                 {filteredProducts.map((product) => (
                   <div
                     key={product.id}
@@ -235,20 +235,18 @@ export default function ProductsPage() {
                         />
                       </div>
 
-                      <div className="px-3 pt-2 pb-2 relative z-10 bg-white">
-                        <h3 className="font-semibold text-gray-900 mb-1.5 text-sm leading-snug tracking-tight line-clamp-2 group-hover:text-primary-600">
+                      <div className="px-3 pt-3 pb-2 relative z-10 bg-white flex flex-col gap-2">
+                        <h3 className="font-semibold text-gray-900 text-sm leading-snug tracking-tight truncate pr-2 group-hover:text-primary-600">
                           {product.name}
                         </h3>
 
-                        <p className="text-xs text-gray-500 mb-2 leading-relaxed line-clamp-2">
+                        <p className="text-xs text-gray-500 leading-relaxed line-clamp-1 pr-2">
                           {product.description || "Un indispensable pour bébé."}
                         </p>
 
-                        <div className="mb-0">
-                          <span className="text-xs font-medium text-primary-600 hover:text-primary-700 cursor-pointer">
-                            En savoir plus
-                          </span>
-                        </div>
+                        <span className="text-xs font-medium text-primary-600 hover:text-primary-700 cursor-pointer">
+                          En savoir plus
+                        </span>
                       </div>
                     </Link>
 

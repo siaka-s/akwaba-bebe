@@ -66,12 +66,12 @@ export default function Header() {
           
           {/* --- NAVIGATION PRINCIPALE (Desktop) --- */}
           {!isAdminPage && (
-            <nav className="hidden md:flex space-x-8">
-              <Link href="/" className="text-gray-600 hover:text-primary-600 font-medium transition-colors">Accueil</Link>
-              <Link href="/produits" className="text-gray-600 hover:text-primary-600 font-medium transition-colors">Produits</Link>
-              <Link href="/notre-histoire" className="text-gray-600 hover:text-primary-600 font-medium transition-colors">Notre histoire</Link>
-              <Link href="/astuces" className="text-gray-600 hover:text-primary-600 font-medium transition-colors">Astuces</Link>
-              <Link href="/contact" className="text-gray-600 hover:text-primary-600 font-medium transition-colors">Contact</Link>
+            <nav className="hidden md:flex flex-1 justify-evenly mx-6 lg:mx-10">
+              <Link href="/" className="text-gray-600 hover:text-primary-600 font-medium transition-colors whitespace-nowrap">Accueil</Link>
+              <Link href="/produits" className="text-gray-600 hover:text-primary-600 font-medium transition-colors whitespace-nowrap">Produits</Link>
+              <Link href="/notre-histoire" className="text-gray-600 hover:text-primary-600 font-medium transition-colors whitespace-nowrap">Notre histoire</Link>
+              <Link href="/astuces" className="text-gray-600 hover:text-primary-600 font-medium transition-colors whitespace-nowrap">Astuces</Link>
+              <Link href="/contact" className="text-gray-600 hover:text-primary-600 font-medium transition-colors whitespace-nowrap">Contact</Link>
             </nav>
           )}
 
