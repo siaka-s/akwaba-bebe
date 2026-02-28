@@ -24,6 +24,7 @@ export default function Header() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAstucesMenuOpen, setIsAstucesMenuOpen] = useState(false);
+  const [isServicesMenuOpen, setIsServicesMenuOpen] = useState(false);
 
   useEffect(() => {
     // Vérif localStorage au chargement et changement de page
@@ -70,7 +71,27 @@ export default function Header() {
             <nav className="hidden md:flex flex-1 justify-evenly mx-6 lg:mx-10 items-center">
               <Link href="/" className="text-gray-600 hover:text-primary-600 font-medium transition-colors whitespace-nowrap">Accueil</Link>
               <Link href="/produits" className="text-gray-600 hover:text-primary-600 font-medium transition-colors whitespace-nowrap">Produits</Link>
-              <Link href="/nos-services" className="text-gray-600 hover:text-primary-600 font-medium transition-colors whitespace-nowrap">Nos services</Link>
+              {/* Dropdown Nos services */}
+              <div className="relative" onMouseEnter={() => setIsServicesMenuOpen(true)} onMouseLeave={() => setIsServicesMenuOpen(false)}>
+                <button className="flex items-center gap-1 text-gray-600 hover:text-primary-600 font-medium transition-colors whitespace-nowrap">
+                  Nos services
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${isServicesMenuOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {isServicesMenuOpen && (
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 w-56 z-50">
+                    <div className="bg-white rounded-xl shadow-xl border border-gray-100 animate-in fade-in zoom-in-95 duration-150">
+                      <div className="py-1.5">
+                        <Link href="/nos-services" className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors">
+                          Nos services
+                        </Link>
+                        <Link href="/composer-ma-box" className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors">
+                          Composer ma box sur mesure
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* Dropdown Astuces */}
               <div className="relative" onMouseEnter={() => setIsAstucesMenuOpen(true)} onMouseLeave={() => setIsAstucesMenuOpen(false)}>
@@ -79,14 +100,16 @@ export default function Header() {
                   <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${isAstucesMenuOpen ? 'rotate-180' : ''}`} />
                 </button>
                 {isAstucesMenuOpen && (
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-44 bg-white rounded-xl shadow-xl border border-gray-100 z-50 animate-in fade-in zoom-in-95 duration-150">
-                    <div className="py-1.5">
-                      <Link href="/astuces" className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors">
-                        Astuces & conseils
-                      </Link>
-                      <Link href="/notre-histoire" className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors">
-                        Notre histoire
-                      </Link>
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 w-44 z-50">
+                    <div className="bg-white rounded-xl shadow-xl border border-gray-100 animate-in fade-in zoom-in-95 duration-150">
+                      <div className="py-1.5">
+                        <Link href="/astuces" className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors">
+                          Astuces & conseils
+                        </Link>
+                        <Link href="/notre-histoire" className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-600 transition-colors">
+                          Notre histoire
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -198,6 +221,7 @@ export default function Header() {
             <Link href="/" className="block py-2 text-gray-700 font-medium">Accueil</Link>
             <Link href="/produits" className="block py-2 text-gray-700 font-medium">Produits</Link>
             <Link href="/nos-services" className="block py-2 text-gray-700 font-medium">Nos services</Link>
+            <Link href="/composer-ma-box" className="block py-2 text-gray-600 pl-4 text-sm border-l-2 border-primary-200">Composer ma box sur mesure</Link>
             <Link href="/astuces" className="block py-2 text-gray-700 font-medium">Astuces</Link>
             <Link href="/notre-histoire" className="block py-2 text-gray-600 pl-4 text-sm border-l-2 border-primary-200">Notre histoire</Link>
             <Link href="/contact" className="block py-2 text-gray-700 font-medium">Contact</Link>

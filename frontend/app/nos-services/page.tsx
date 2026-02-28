@@ -1,6 +1,6 @@
 'use client';
 
-import { Truck, ShieldCheck, HeartHandshake, Gift, Baby, Star, Phone } from 'lucide-react';
+import { Truck, ShieldCheck, HeartHandshake, Gift, Baby, Star, Phone, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
 const services = [
@@ -58,8 +58,36 @@ export default function NosServicesPage() {
         </div>
       </section>
 
+      {/* Carte vedette — Box cadeaux */}
+      <section className="py-10 px-4">
+        <div className="max-w-screen-lg mx-auto">
+          <div className="relative bg-linear-to-r from-pink-500 to-secondary-500 rounded-3xl p-8 md:p-10 overflow-hidden shadow-lg">
+            <div className="absolute -top-10 -right-10 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute bottom-0 left-1/3 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+            <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+              <div>
+                <div className="inline-flex items-center gap-2 bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full mb-3">
+                  <Gift className="h-3.5 w-3.5" /> Service phare
+                </div>
+                <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-2">Box cadeaux sur mesure</h2>
+                <p className="text-white/85 text-sm max-w-md leading-relaxed">
+                  Choisissez vous-même les produits de votre box. Nous préparons l'emballage avec soin — idéal pour un baby shower, une naissance ou un cadeau original.
+                </p>
+              </div>
+              <Link
+                href="/composer-ma-box"
+                className="flex-shrink-0 inline-flex items-center gap-2 bg-white text-pink-600 font-bold px-6 py-3 rounded-2xl hover:bg-pink-50 transition-colors shadow-md self-start md:self-auto"
+              >
+                Composer ma box
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Grille services */}
-      <section className="py-12 px-4">
+      <section className="pb-12 px-4">
         <div className="max-w-screen-lg mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {services.map((service) => {
             const Icon = service.icon;
