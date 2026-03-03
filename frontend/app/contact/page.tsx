@@ -50,9 +50,9 @@ export default function ContactPage() {
 
       {/* Horaires */}
       <section className="bg-primary-50 py-3 px-4 border-b border-primary-100">
-        <div className="max-w-screen-lg mx-auto flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+        <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
           <div className="flex items-center gap-1.5 text-xs font-medium text-gray-600">
-            <Clock className="h-3.5 w-3.5 text-primary-500 flex-shrink-0" />
+            <Clock className="h-3.5 w-3.5 text-primary-500 shrink-0" />
             <span><span className="font-bold text-gray-700">Lun – Ven</span> · 9h00 – 19h00</span>
           </div>
           <span className="text-gray-300">·</span>
@@ -64,7 +64,7 @@ export default function ContactPage() {
 
       {/* Boutons d'action rapide — mobile first */}
       <section className="px-4 py-6">
-        <div className="max-w-screen-lg mx-auto grid grid-cols-3 gap-3">
+        <div className="max-w-5xl mx-auto grid grid-cols-3 gap-3">
 
           <a href={`tel:${PHONE}`}
             className="flex flex-col items-center gap-2 bg-white border border-gray-100 rounded-2xl py-4 px-2 shadow-sm hover:shadow-md hover:border-primary-200 transition-all active:scale-95 group">
@@ -98,7 +98,7 @@ export default function ContactPage() {
 
       {/* Layout principal */}
       <section className="px-4 pb-16">
-        <div className="max-w-screen-lg mx-auto grid grid-cols-1 md:grid-cols-5 gap-6">
+        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-5 gap-6">
 
           {/* Infos (gauche — desktop) */}
           <div className="md:col-span-2 bg-primary-600 rounded-3xl p-8 text-white flex flex-col justify-between relative overflow-hidden">
@@ -113,7 +113,7 @@ export default function ContactPage() {
 
               <div className="space-y-5">
                 <a href={`tel:${PHONE}`} className="flex items-center gap-4 group">
-                  <div className="bg-white/10 p-3 rounded-xl group-hover:bg-white/20 transition-colors flex-shrink-0">
+                  <div className="bg-white/10 p-3 rounded-xl group-hover:bg-white/20 transition-colors shrink-0">
                     <Phone className="h-5 w-5" />
                   </div>
                   <div>
@@ -123,7 +123,7 @@ export default function ContactPage() {
                 </a>
 
                 <a href={WHATSAPP} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 group">
-                  <div className="bg-white/10 p-3 rounded-xl group-hover:bg-white/20 transition-colors flex-shrink-0">
+                  <div className="bg-white/10 p-3 rounded-xl group-hover:bg-white/20 transition-colors shrink-0">
                     <MessageCircle className="h-5 w-5" />
                   </div>
                   <div>
@@ -133,7 +133,7 @@ export default function ContactPage() {
                 </a>
 
                 <a href={`mailto:${EMAIL}`} className="flex items-center gap-4 group">
-                  <div className="bg-white/10 p-3 rounded-xl group-hover:bg-white/20 transition-colors flex-shrink-0">
+                  <div className="bg-white/10 p-3 rounded-xl group-hover:bg-white/20 transition-colors shrink-0">
                     <Mail className="h-5 w-5" />
                   </div>
                   <div>
@@ -143,7 +143,7 @@ export default function ContactPage() {
                 </a>
 
                 <div className="flex items-center gap-4">
-                  <div className="bg-white/10 p-3 rounded-xl flex-shrink-0">
+                  <div className="bg-white/10 p-3 rounded-xl shrink-0">
                     <MapPin className="h-5 w-5" />
                   </div>
                   <div>
