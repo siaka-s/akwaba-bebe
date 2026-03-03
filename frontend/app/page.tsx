@@ -94,59 +94,92 @@ export default function Home() {
           <div className="absolute -bottom-10 right-[15%] w-64 h-64 bg-secondary-300/20 rounded-full blur-3xl pointer-events-none animate-pulse [animation-duration:4s] [animation-delay:1s]" />
           <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-primary-200/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none animate-pulse [animation-duration:5s] [animation-delay:2s]" />
 
-          <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 px-4 sm:px-6 relative z-10">
+          {/* ===== MOBILE ===== */}
+          <div className="md:hidden flex flex-col items-center gap-5 pt-4 pb-2 relative z-10">
+
+            {/* Badges */}
+            <div className="inline-flex flex-nowrap justify-center gap-3 text-xs font-bold text-secondary-500 uppercase tracking-wide bg-white/60 px-4 py-2 rounded-full border border-primary-100 whitespace-nowrap">
+              <span className="flex items-center gap-1"><Gift className="h-3 w-3" /> Cadeaux</span>
+              <span className="text-gray-300">•</span>
+              <span className="flex items-center gap-1"><Baby className="h-3 w-3" /> Maternité</span>
+              <span className="text-gray-300">•</span>
+              <span className="flex items-center gap-1"><Heart className="h-3 w-3" /> Soins</span>
+            </div>
+
+            {/* Défilement horizontal des 4 produits */}
+            {[...heroImages2, ...heroImages].length > 0 && (
+              <div className="w-full overflow-x-auto flex gap-3 px-4 pb-2 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {[...heroImages2, ...heroImages].map((product, i) => (
+                  <Link
+                    key={product.id}
+                    href={`/produits/${product.id}`}
+                    className="snap-start flex-shrink-0 w-40 bg-white rounded-2xl overflow-hidden shadow-md border border-gray-100 flex flex-col"
+                  >
+                    <div className="relative h-44 overflow-hidden">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={product.image_url}
+                        alt={product.name}
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        onClick={(e) => handleAddToCart(e, product)}
+                        className={`absolute top-2 ${i < 2 ? 'right-2' : 'left-2'} bg-white/90 hover:bg-primary-600 text-primary-600 hover:text-white p-1.5 rounded-full shadow-md transition-all active:scale-90 z-10`}
+                      >
+                        <ShoppingCart className="h-3 w-3" />
+                      </button>
+                    </div>
+                    <div className="p-2.5 flex flex-col gap-1">
+                      <p className="text-[11px] font-semibold text-gray-800 leading-snug line-clamp-2">{product.name}</p>
+                      <p className="text-xs font-bold text-primary-600">{product.price.toLocaleString()} F</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+
+            {/* Bouton catalogue */}
+            <Link
+              href="/produits"
+              className="bg-primary-600 text-white px-8 py-3 rounded-full font-bold hover:bg-primary-700 transition-all shadow-lg shadow-primary-200 flex items-center gap-2 active:scale-95"
+            >
+              Voir le catalogue <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+
+          {/* ===== DESKTOP ===== */}
+          <div className="hidden md:flex max-w-screen-2xl mx-auto w-full flex-row items-center justify-between gap-4 px-4 sm:px-6 relative z-10">
 
             {/* BLOC 1 : IMAGES HERO (box) */}
             {heroImages2.length >= 2 && (
-              <div className="hidden md:flex flex-1 gap-4 justify-center items-center mt-6 md:mt-0">
+              <div className="flex flex-1 gap-4 justify-center items-center mt-6 md:mt-0">
                 <Link href={`/produits/${heroImages2[0].id}`} className="group/img relative w-40 md:w-52 aspect-3/4 mb-8 transform rotate-2 hover:rotate-0 transition-all duration-500 block">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={heroImages2[0].image_url}
-                    alt={heroImages2[0].name}
-                    className="rounded-2xl shadow-xl object-cover w-full h-full border-4 border-white"
-                  />
-                  <button
-                    onClick={(e) => handleAddToCart(e, heroImages2[0])}
-                    className="absolute top-3 right-3 bg-white/90 hover:bg-primary-600 text-primary-600 hover:text-white p-1.5 rounded-full shadow-md transition-all duration-200 active:scale-90 z-10"
-                  >
+                  <img src={heroImages2[0].image_url} alt={heroImages2[0].name} className="rounded-2xl shadow-xl object-cover w-full h-full border-4 border-white" />
+                  <button onClick={(e) => handleAddToCart(e, heroImages2[0])} className="absolute top-3 right-3 bg-white/90 hover:bg-primary-600 text-primary-600 hover:text-white p-1.5 rounded-full shadow-md transition-all duration-200 active:scale-90 z-10">
                     <ShoppingCart className="h-3 w-3" />
                   </button>
                   <div className="absolute inset-0 rounded-2xl bg-linear-to-t from-primary-900/55 via-primary-700/10 to-transparent flex items-end p-3">
                     <div className="w-full">
                       <span className="text-white text-xs font-bold leading-snug line-clamp-1 block">
-                        <span className="text-secondary-300">{heroImages2[0].name.split(' ')[0]}</span>{' '}
-                        {heroImages2[0].name.split(' ').slice(1).join(' ')}
+                        <span className="text-secondary-300">{heroImages2[0].name.split(' ')[0]}</span>{' '}{heroImages2[0].name.split(' ').slice(1).join(' ')}
                       </span>
-                      <p className="text-white/90 text-[10px] leading-relaxed line-clamp-4 mt-1.5 pb-1 max-h-0 overflow-hidden group-hover/img:max-h-24 transition-all duration-300">
-                        {heroImages2[0].description}
-                      </p>
+                      <p className="text-white/90 text-[10px] leading-relaxed line-clamp-4 mt-1.5 pb-1 max-h-0 overflow-hidden group-hover/img:max-h-24 transition-all duration-300">{heroImages2[0].description}</p>
                     </div>
                   </div>
                 </Link>
-
                 <Link href={`/produits/${heroImages2[1].id}`} className="group/img relative w-40 md:w-52 aspect-3/4 mt-8 transform -rotate-2 hover:rotate-0 transition-all duration-500 block">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={heroImages2[1].image_url}
-                    alt={heroImages2[1].name}
-                    className="rounded-2xl shadow-xl object-cover w-full h-full border-4 border-white"
-                  />
-                  <button
-                    onClick={(e) => handleAddToCart(e, heroImages2[1])}
-                    className="absolute top-3 right-3 bg-white/90 hover:bg-primary-600 text-primary-600 hover:text-white p-1.5 rounded-full shadow-md transition-all duration-200 active:scale-90 z-10"
-                  >
+                  <img src={heroImages2[1].image_url} alt={heroImages2[1].name} className="rounded-2xl shadow-xl object-cover w-full h-full border-4 border-white" />
+                  <button onClick={(e) => handleAddToCart(e, heroImages2[1])} className="absolute top-3 right-3 bg-white/90 hover:bg-primary-600 text-primary-600 hover:text-white p-1.5 rounded-full shadow-md transition-all duration-200 active:scale-90 z-10">
                     <ShoppingCart className="h-3 w-3" />
                   </button>
                   <div className="absolute inset-0 rounded-2xl bg-linear-to-t from-primary-900/55 via-primary-700/10 to-transparent flex items-end p-3">
                     <div className="w-full">
                       <span className="text-white text-xs font-bold leading-snug line-clamp-1 block">
-                        <span className="text-secondary-300">{heroImages2[1].name.split(' ')[0]}</span>{' '}
-                        {heroImages2[1].name.split(' ').slice(1).join(' ')}
+                        <span className="text-secondary-300">{heroImages2[1].name.split(' ')[0]}</span>{' '}{heroImages2[1].name.split(' ').slice(1).join(' ')}
                       </span>
-                      <p className="text-white/90 text-[10px] leading-relaxed line-clamp-4 mt-1.5 pb-1 max-h-0 overflow-hidden group-hover/img:max-h-24 transition-all duration-300">
-                        {heroImages2[1].description}
-                      </p>
+                      <p className="text-white/90 text-[10px] leading-relaxed line-clamp-4 mt-1.5 pb-1 max-h-0 overflow-hidden group-hover/img:max-h-24 transition-all duration-300">{heroImages2[1].description}</p>
                     </div>
                   </div>
                 </Link>
@@ -156,80 +189,47 @@ export default function Home() {
             {/* BLOC 2 : DÉTAILS & ACTIONS */}
             <div className="flex-[0.5] flex flex-col items-center text-center space-y-10">
               <div className="inline-flex flex-nowrap justify-center gap-3 text-xs font-bold text-secondary-500 uppercase tracking-wide bg-white/60 px-4 py-2 rounded-full border border-primary-100 whitespace-nowrap">
-                <span className="flex items-center gap-1">
-                  <Gift className="h-3 w-3" /> Cadeaux
-                </span>
+                <span className="flex items-center gap-1"><Gift className="h-3 w-3" /> Cadeaux</span>
                 <span className="text-gray-300">•</span>
-                <span className="flex items-center gap-1">
-                  <Baby className="h-3 w-3" /> Maternité
-                </span>
+                <span className="flex items-center gap-1"><Baby className="h-3 w-3" /> Maternité</span>
                 <span className="text-gray-300">•</span>
-                <span className="flex items-center gap-1">
-                  <Heart className="h-3 w-3" /> Soins
-                </span>
+                <span className="flex items-center gap-1"><Heart className="h-3 w-3" /> Soins</span>
               </div>
-
-              <div>
-                <Link
-                  href="/produits"
-                  className="bg-primary-600 text-white px-8 py-3 rounded-full font-bold hover:bg-primary-700 transition-all shadow-lg shadow-primary-200 flex items-center gap-2 hover:-translate-y-1"
-                >
-                  Voir le catalogue <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
+              <Link href="/produits" className="bg-primary-600 text-white px-8 py-3 rounded-full font-bold hover:bg-primary-700 transition-all shadow-lg shadow-primary-200 flex items-center gap-2 hover:-translate-y-1">
+                Voir le catalogue <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
 
             {/* BLOC 3 : IMAGES HERO (allaitement) */}
             {heroImages.length >= 2 && (
-              <div className="hidden md:flex flex-1 gap-4 justify-center items-center mt-6 md:mt-0">
+              <div className="flex flex-1 gap-4 justify-center items-center mt-6 md:mt-0">
                 <Link href={`/produits/${heroImages[0].id}`} className="group/img relative w-40 md:w-52 aspect-3/4 mt-8 transform -rotate-2 hover:rotate-0 transition-all duration-500 block">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={heroImages[0].image_url}
-                    alt={heroImages[0].name}
-                    className="rounded-2xl shadow-xl object-cover w-full h-full border-4 border-white"
-                  />
-                  <button
-                    onClick={(e) => handleAddToCart(e, heroImages[0])}
-                    className="absolute top-3 left-3 bg-white/90 hover:bg-primary-600 text-primary-600 hover:text-white p-1.5 rounded-full shadow-md transition-all duration-200 active:scale-90 z-10"
-                  >
+                  <img src={heroImages[0].image_url} alt={heroImages[0].name} className="rounded-2xl shadow-xl object-cover w-full h-full border-4 border-white" />
+                  <button onClick={(e) => handleAddToCart(e, heroImages[0])} className="absolute top-3 left-3 bg-white/90 hover:bg-primary-600 text-primary-600 hover:text-white p-1.5 rounded-full shadow-md transition-all duration-200 active:scale-90 z-10">
                     <ShoppingCart className="h-3 w-3" />
                   </button>
                   <div className="absolute inset-0 rounded-2xl bg-linear-to-t from-primary-900/55 via-primary-700/10 to-transparent flex items-end p-3">
                     <div className="w-full">
                       <span className="text-white text-xs font-bold leading-snug line-clamp-1 block">
-                        <span className="text-secondary-300">{heroImages[0].name.split(' ')[0]}</span>{' '}
-                        {heroImages[0].name.split(' ').slice(1).join(' ')}
+                        <span className="text-secondary-300">{heroImages[0].name.split(' ')[0]}</span>{' '}{heroImages[0].name.split(' ').slice(1).join(' ')}
                       </span>
-                      <p className="text-white/90 text-[10px] leading-relaxed line-clamp-4 mt-1.5 pb-1 max-h-0 overflow-hidden group-hover/img:max-h-24 transition-all duration-300">
-                        {heroImages[0].description}
-                      </p>
+                      <p className="text-white/90 text-[10px] leading-relaxed line-clamp-4 mt-1.5 pb-1 max-h-0 overflow-hidden group-hover/img:max-h-24 transition-all duration-300">{heroImages[0].description}</p>
                     </div>
                   </div>
                 </Link>
-
                 <Link href={`/produits/${heroImages[1].id}`} className="group/img relative w-40 md:w-52 aspect-3/4 mb-8 transform rotate-2 hover:rotate-0 transition-all duration-500 block">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={heroImages[1].image_url}
-                    alt={heroImages[1].name}
-                    className="rounded-2xl shadow-xl object-cover w-full h-full border-4 border-white"
-                  />
-                  <button
-                    onClick={(e) => handleAddToCart(e, heroImages[1])}
-                    className="absolute top-3 left-3 bg-white/90 hover:bg-primary-600 text-primary-600 hover:text-white p-1.5 rounded-full shadow-md transition-all duration-200 active:scale-90 z-10"
-                  >
+                  <img src={heroImages[1].image_url} alt={heroImages[1].name} className="rounded-2xl shadow-xl object-cover w-full h-full border-4 border-white" />
+                  <button onClick={(e) => handleAddToCart(e, heroImages[1])} className="absolute top-3 left-3 bg-white/90 hover:bg-primary-600 text-primary-600 hover:text-white p-1.5 rounded-full shadow-md transition-all duration-200 active:scale-90 z-10">
                     <ShoppingCart className="h-3 w-3" />
                   </button>
                   <div className="absolute inset-0 rounded-2xl bg-linear-to-t from-primary-900/55 via-primary-700/10 to-transparent flex items-end p-3">
                     <div className="w-full">
                       <span className="text-white text-xs font-bold leading-snug line-clamp-1 block">
-                        <span className="text-secondary-300">{heroImages[1].name.split(' ')[0]}</span>{' '}
-                        {heroImages[1].name.split(' ').slice(1).join(' ')}
+                        <span className="text-secondary-300">{heroImages[1].name.split(' ')[0]}</span>{' '}{heroImages[1].name.split(' ').slice(1).join(' ')}
                       </span>
-                      <p className="text-white/90 text-[10px] leading-relaxed line-clamp-4 mt-1.5 pb-1 max-h-0 overflow-hidden group-hover/img:max-h-24 transition-all duration-300">
-                        {heroImages[1].description}
-                      </p>
+                      <p className="text-white/90 text-[10px] leading-relaxed line-clamp-4 mt-1.5 pb-1 max-h-0 overflow-hidden group-hover/img:max-h-24 transition-all duration-300">{heroImages[1].description}</p>
                     </div>
                   </div>
                 </Link>

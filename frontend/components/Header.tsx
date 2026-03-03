@@ -215,33 +215,70 @@ export default function Header() {
           </div>
         </div>
 
-        {/* --- CONTENU MENU MOBILE --- */}
+        {/* --- MENU MOBILE (flottant, ne couvre pas toute la page) --- */}
         {isMobileMenuOpen && (
-          <div className="md:hidden mt-4 pt-4 border-t border-gray-100 space-y-3 animate-in slide-in-from-top-5">
-            <Link href="/" className="block py-2 text-gray-700 font-medium">Accueil</Link>
-            <Link href="/produits" className="block py-2 text-gray-700 font-medium">Produits</Link>
-            <Link href="/nos-services" className="block py-2 text-gray-700 font-medium">Nos services</Link>
-            <Link href="/composer-ma-box" className="block py-2 text-gray-600 pl-4 text-sm border-l-2 border-primary-200">Composer ma box sur mesure</Link>
-            <Link href="/astuces" className="block py-2 text-gray-700 font-medium">Astuces</Link>
-            <Link href="/notre-histoire" className="block py-2 text-gray-600 pl-4 text-sm border-l-2 border-primary-200">Notre histoire</Link>
-            <Link href="/contact" className="block py-2 text-gray-700 font-medium">Contact</Link>
-            
-            <div className="border-t border-gray-100 my-2 pt-2">
-              {isLoggedIn ? (
-                <>
-                  <div className="flex items-center gap-2 py-2 text-primary-700 font-bold">
-                    <User className="h-4 w-4" />
-                    {userName}
-                  </div>
-                  <Link href="/profil" className="block py-2 text-gray-600 pl-6">Mon Profil</Link>
-                  <Link href="/orders" className="block py-2 text-gray-600 pl-6">Mes Commandes</Link>
-                  <button onClick={handleLogout} className="w-full text-left py-2 text-red-500 pl-6">Déconnexion</button>
-                </>
-              ) : (
-                <Link href="/login" className="block w-full text-center bg-primary-600 text-white py-2 rounded-lg font-bold">
-                  Se connecter
+          <div className="md:hidden absolute top-full left-0 right-0 z-40 animate-in slide-in-from-top-2 duration-200">
+            <div className="mx-3 mb-3 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+              <div className="p-4 space-y-1">
+
+                <Link href="/" onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 text-gray-700 font-medium transition-colors">
+                  Accueil
                 </Link>
-              )}
+                <Link href="/produits" onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 text-gray-700 font-medium transition-colors">
+                  Produits
+                </Link>
+
+                {/* Nos services + sous-item */}
+                <Link href="/nos-services" onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 text-gray-700 font-medium transition-colors">
+                  Nos services
+                </Link>
+                <Link href="/composer-ma-box" onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-3 pl-8 pr-3 py-2 rounded-xl hover:bg-primary-50 text-gray-500 text-sm transition-colors border-l-2 border-primary-200 ml-3">
+                  Composer ma box sur mesure
+                </Link>
+
+                {/* Astuces + sous-item */}
+                <Link href="/astuces" onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 text-gray-700 font-medium transition-colors">
+                  Astuces
+                </Link>
+                <Link href="/notre-histoire" onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-3 pl-8 pr-3 py-2 rounded-xl hover:bg-primary-50 text-gray-500 text-sm transition-colors border-l-2 border-primary-200 ml-3">
+                  Notre histoire
+                </Link>
+
+                <Link href="/contact" onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 text-gray-700 font-medium transition-colors">
+                  Contact
+                </Link>
+              </div>
+
+              {/* Section compte */}
+              <div className="border-t border-gray-100 p-4">
+                {isLoggedIn ? (
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 px-3 py-2 text-primary-700 font-bold text-sm">
+                      <User className="h-4 w-4" />
+                      {userName}
+                    </div>
+                    <Link href="/profil" onClick={() => setIsMobileMenuOpen(false)}
+                      className="block px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-xl">Mon Profil</Link>
+                    <Link href="/orders" onClick={() => setIsMobileMenuOpen(false)}
+                      className="block px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-xl">Mes Commandes</Link>
+                    <button onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }}
+                      className="w-full text-left px-3 py-2 text-sm text-red-500 hover:bg-red-50 rounded-xl">Déconnexion</button>
+                  </div>
+                ) : (
+                  <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center justify-center gap-2 bg-primary-600 text-white py-3 rounded-xl font-bold text-sm">
+                    <User className="h-4 w-4" />
+                    Se connecter
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
         )}
