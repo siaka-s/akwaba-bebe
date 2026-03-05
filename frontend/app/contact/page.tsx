@@ -48,20 +48,6 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-28 md:pb-0">
 
-      {/* Horaires */}
-      <section className="bg-primary-50 py-3 px-4 border-b border-primary-100">
-        <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
-          <div className="flex items-center gap-1.5 text-xs font-medium text-gray-600">
-            <Clock className="h-3.5 w-3.5 text-primary-500 shrink-0" />
-            <span><span className="font-bold text-gray-700">Lun – Ven</span> · 9h00 – 19h00</span>
-          </div>
-          <span className="text-gray-300">·</span>
-          <div className="text-xs font-medium text-gray-600">
-            <span><span className="font-bold text-gray-700">Samedi</span> · 9h00 – 14h00</span>
-          </div>
-        </div>
-      </section>
-
       {/* ===== MOBILE : Actions rapides ===== */}
       <section className="md:hidden px-4 pt-5 pb-2">
 
