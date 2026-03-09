@@ -2,19 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import {
-  ArrowRight,
-  ShoppingCart,
-  Truck,
-  ShieldCheck,
-  Star,
-  Gift,
-  Baby,
-  Heart,
-  ChevronUp,
-  ChevronDown,
-  Loader2,
-} from "lucide-react";
+import { ArrowRight, ShoppingCart, Gift, Baby, Heart, Loader2 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import toast from "react-hot-toast";
 import { API_URL } from "@/config";
@@ -30,41 +18,22 @@ interface Product {
 
 export default function Home() {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
-  const [heroImages, setHeroImages] = useState<Product[]>([]);   // BLOC 3 : allaitement
-  const [heroImages2, setHeroImages2] = useState<Product[]>([]); // BLOC 1 : box
+  const [heroScrollProducts, setHeroScrollProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showHero, setShowHero] = useState(true);
 
   const { addToCart } = useCart();
 
   useEffect(() => {
-    Promise.all([
-      fetch(`${API_URL}/products`).then((r) => r.json()),
-      fetch(`${API_URL}/categories`).then((r) => r.json()),
-    ])
-      .then(([data, cats]: [Product[], { id: number; name: string }[]]) => {
-        if (!data) return setFeaturedProducts([]);
-
+    fetch(`${API_URL}/products`)
+      .then((r) => r.json())
+      .then((data: Product[]) => {
+        if (!data) return;
         const shuffle = (arr: Product[]) => [...arr].sort(() => Math.random() - 0.5);
-
-        // Trouver les catégories cibles
-        const boxCat = cats?.find((c) => c.name.toLowerCase().includes('box'));
-        const allaitCat = cats?.find((c) => c.name.toLowerCase().includes('allait'));
-
-        // BLOC 1 gauche : priorité "box"
-        const boxPool = boxCat ? data.filter((p) => p.category_id === boxCat.id) : [];
-        const left = boxPool.length >= 2 ? shuffle(boxPool).slice(0, 2) : shuffle(data).slice(0, 2);
-        setHeroImages2(left);
-
-        // BLOC 3 droit : priorité "allaitement", jamais les mêmes que BLOC 1
-        const leftIds = new Set(left.map((p) => p.id));
-        const allaitPool = allaitCat ? data.filter((p) => p.category_id === allaitCat.id && !leftIds.has(p.id)) : [];
-        const right = allaitPool.length >= 2 ? shuffle(allaitPool).slice(0, 2) : shuffle(data).filter((p) => !leftIds.has(p.id)).slice(0, 2);
-        setHeroImages(right);
-
-        // Grille : exclure les 4 images hero
-        const allHeroIds = new Set([...left, ...right].map((p) => p.id));
-        setFeaturedProducts(shuffle(data).filter((p) => !allHeroIds.has(p.id)).slice(0, 24));
+        const shuffled = shuffle(data);
+        const hero = shuffled.slice(0, 12);
+        setHeroScrollProducts(hero);
+        const heroIds = new Set(hero.map((p) => p.id));
+        setFeaturedProducts(shuffled.filter((p) => !heroIds.has(p.id)).slice(0, 24));
       })
       .catch((err) => console.error("Erreur fetch:", err))
       .finally(() => setLoading(false));
@@ -87,160 +56,71 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white w-full">
       {/* --- 1. HERO SECTION --- */}
-      {showHero && (
-        <section className="relative bg-primary-50 pt-3 pb-3 px-4 animate-in fade-in duration-700 overflow-hidden">
-          {/* Blobs décoratifs floutés animés */}
-          <div className="absolute -top-10 left-[15%] w-72 h-72 bg-primary-300/30 rounded-full blur-3xl pointer-events-none animate-pulse [animation-duration:3s]" />
-          <div className="absolute -bottom-10 right-[15%] w-64 h-64 bg-secondary-300/20 rounded-full blur-3xl pointer-events-none animate-pulse [animation-duration:4s] [animation-delay:1s]" />
-          <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-primary-200/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none animate-pulse [animation-duration:5s] [animation-delay:2s]" />
+      <section className="relative bg-primary-50 overflow-hidden animate-in fade-in duration-700">
+        {/* Blobs décoratifs */}
+        <div className="absolute -top-10 left-[10%] w-72 h-72 bg-primary-300/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-10 right-[10%] w-64 h-64 bg-secondary-300/20 rounded-full blur-3xl pointer-events-none" />
 
-          {/* ===== MOBILE ===== */}
-          <div className="md:hidden flex flex-col items-center gap-5 pt-4 pb-2 relative z-10">
+        {/* Badges + CTA */}
+        <div className="relative z-10 flex items-center justify-between px-5 md:px-10 pt-4 pb-3">
+          <div className="inline-flex flex-nowrap gap-3 text-xs font-bold text-secondary-500 uppercase tracking-wide bg-white/70 px-4 py-2 rounded-full border border-primary-100 whitespace-nowrap">
+            <span className="flex items-center gap-1"><Gift className="h-3 w-3" /> Cadeaux</span>
+            <span className="text-gray-300">•</span>
+            <span className="flex items-center gap-1"><Baby className="h-3 w-3" /> Maternité</span>
+            <span className="text-gray-300">•</span>
+            <span className="hidden sm:flex items-center gap-1"><Heart className="h-3 w-3" /> Soins</span>
+          </div>
+          <Link
+            href="/produits"
+            className="bg-primary-600 text-white px-5 py-2.5 rounded-full font-bold hover:bg-primary-700 transition-all shadow-md shadow-primary-200/60 flex items-center gap-2 active:scale-95 text-sm shrink-0"
+          >
+            Voir le catalogue <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
 
-            {/* Badges */}
-            <div className="inline-flex flex-nowrap justify-center gap-3 text-xs font-bold text-secondary-500 uppercase tracking-wide bg-white/60 px-4 py-2 rounded-full border border-primary-100 whitespace-nowrap">
-              <span className="flex items-center gap-1"><Gift className="h-3 w-3" /> Cadeaux</span>
-              <span className="text-gray-300">•</span>
-              <span className="flex items-center gap-1"><Baby className="h-3 w-3" /> Maternité</span>
-              <span className="text-gray-300">•</span>
-              <span className="flex items-center gap-1"><Heart className="h-3 w-3" /> Soins</span>
-            </div>
+        {/* Défilement horizontal — 12 produits */}
+        {heroScrollProducts.length > 0 && (
+          <div className="relative">
+            {/* Fade gauche */}
+            <div className="absolute left-0 top-0 bottom-5 w-8 bg-linear-to-r from-primary-50 to-transparent z-20 pointer-events-none" />
+            {/* Fade droit */}
+            <div className="absolute right-0 top-0 bottom-5 w-10 bg-linear-to-l from-primary-50 to-transparent z-20 pointer-events-none" />
 
-            {/* Défilement horizontal des 4 produits */}
-            {[...heroImages2, ...heroImages].length > 0 && (
-              <div className="w-full overflow-x-auto flex gap-3 px-4 pb-2 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {[...heroImages2, ...heroImages].map((product, i) => (
-                  <Link
-                    key={product.id}
-                    href={`/produits/${product.id}`}
-                    className="snap-start flex-shrink-0 w-40 bg-white rounded-2xl overflow-hidden shadow-md border border-gray-100 flex flex-col"
+            <div className="relative z-10 overflow-x-auto flex gap-5 md:gap-6 px-5 md:px-10 pb-8 pt-3 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {heroScrollProducts.map((product, i) => (
+                <Link
+                  key={product.id}
+                  href={`/produits/${product.id}`}
+                  className={`group/img snap-start shrink-0 relative w-36 md:w-48 aspect-3/4 block transform transition-all duration-500 hover:rotate-0 hover:scale-105 ${i % 2 === 0 ? 'rotate-2 self-end mb-4' : '-rotate-2 self-start mt-4'}`}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={product.image_url}
+                    alt={product.name}
+                    className="rounded-2xl shadow-xl object-cover w-full h-full border-4 border-white"
+                  />
+                  <button
+                    onClick={(e) => handleAddToCart(e, product)}
+                    className="absolute top-3 right-3 bg-white/90 hover:bg-primary-600 text-primary-600 hover:text-white p-1.5 rounded-full shadow-md transition-all duration-200 active:scale-90 z-10"
                   >
-                    <div className="relative h-44 overflow-hidden">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={product.image_url}
-                        alt={product.name}
-                        className="w-full h-full object-cover"
-                      />
-                      <button
-                        onClick={(e) => handleAddToCart(e, product)}
-                        className={`absolute top-2 ${i < 2 ? 'right-2' : 'left-2'} bg-white/90 hover:bg-primary-600 text-primary-600 hover:text-white p-1.5 rounded-full shadow-md transition-all active:scale-90 z-10`}
-                      >
-                        <ShoppingCart className="h-3 w-3" />
-                      </button>
-                    </div>
-                    <div className="p-2.5 flex flex-col gap-1">
-                      <p className="text-[11px] font-semibold text-gray-800 leading-snug line-clamp-2">{product.name}</p>
-                      <p className="text-xs font-bold text-primary-600">{product.price.toLocaleString()} F</p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-
-            {/* Bouton catalogue */}
-            <Link
-              href="/produits"
-              className="bg-primary-600 text-white px-8 py-3 rounded-full font-bold hover:bg-primary-700 transition-all shadow-lg shadow-primary-200 flex items-center gap-2 active:scale-95"
-            >
-              Voir le catalogue <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-
-          {/* ===== DESKTOP ===== */}
-          <div className="hidden md:flex max-w-screen-2xl mx-auto w-full flex-row items-center justify-between gap-4 px-4 sm:px-6 relative z-10">
-
-            {/* BLOC 1 : IMAGES HERO (box) */}
-            {heroImages2.length >= 2 && (
-              <div className="flex flex-1 gap-4 justify-center items-center mt-6 md:mt-0">
-                <Link href={`/produits/${heroImages2[0].id}`} className="group/img relative w-40 md:w-52 aspect-3/4 mb-8 transform rotate-2 hover:rotate-0 transition-all duration-500 block">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={heroImages2[0].image_url} alt={heroImages2[0].name} className="rounded-2xl shadow-xl object-cover w-full h-full border-4 border-white" />
-                  <button onClick={(e) => handleAddToCart(e, heroImages2[0])} className="absolute top-3 right-3 bg-white/90 hover:bg-primary-600 text-primary-600 hover:text-white p-1.5 rounded-full shadow-md transition-all duration-200 active:scale-90 z-10">
                     <ShoppingCart className="h-3 w-3" />
                   </button>
-                  <div className="absolute inset-0 rounded-2xl bg-linear-to-t from-primary-900/55 via-primary-700/10 to-transparent flex items-end p-3">
+                  <div className="absolute inset-0 rounded-2xl bg-linear-to-t from-primary-900/60 via-primary-700/10 to-transparent flex items-end p-3">
                     <div className="w-full">
                       <span className="text-white text-xs font-bold leading-snug line-clamp-1 block">
-                        <span className="text-secondary-300">{heroImages2[0].name.split(' ')[0]}</span>{' '}{heroImages2[0].name.split(' ').slice(1).join(' ')}
+                        <span className="text-secondary-300">{product.name.split(' ')[0]}</span>{' '}{product.name.split(' ').slice(1).join(' ')}
                       </span>
-                      <p className="text-white/90 text-[10px] leading-relaxed line-clamp-4 mt-1.5 pb-1 max-h-0 overflow-hidden group-hover/img:max-h-24 transition-all duration-300">{heroImages2[0].description}</p>
+                      <p className="text-white/85 text-[10px] leading-relaxed mt-1 max-h-0 overflow-hidden group-hover/img:max-h-16 transition-all duration-300">
+                        {product.price.toLocaleString()} F
+                      </p>
                     </div>
                   </div>
                 </Link>
-                <Link href={`/produits/${heroImages2[1].id}`} className="group/img relative w-40 md:w-52 aspect-3/4 mt-8 transform -rotate-2 hover:rotate-0 transition-all duration-500 block">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={heroImages2[1].image_url} alt={heroImages2[1].name} className="rounded-2xl shadow-xl object-cover w-full h-full border-4 border-white" />
-                  <button onClick={(e) => handleAddToCart(e, heroImages2[1])} className="absolute top-3 right-3 bg-white/90 hover:bg-primary-600 text-primary-600 hover:text-white p-1.5 rounded-full shadow-md transition-all duration-200 active:scale-90 z-10">
-                    <ShoppingCart className="h-3 w-3" />
-                  </button>
-                  <div className="absolute inset-0 rounded-2xl bg-linear-to-t from-primary-900/55 via-primary-700/10 to-transparent flex items-end p-3">
-                    <div className="w-full">
-                      <span className="text-white text-xs font-bold leading-snug line-clamp-1 block">
-                        <span className="text-secondary-300">{heroImages2[1].name.split(' ')[0]}</span>{' '}{heroImages2[1].name.split(' ').slice(1).join(' ')}
-                      </span>
-                      <p className="text-white/90 text-[10px] leading-relaxed line-clamp-4 mt-1.5 pb-1 max-h-0 overflow-hidden group-hover/img:max-h-24 transition-all duration-300">{heroImages2[1].description}</p>
-                    </div>
-                  </div>
-                </Link>
-              </div>
-            )}
-
-            {/* BLOC 2 : DÉTAILS & ACTIONS */}
-            <div className="flex-[0.5] flex flex-col items-center text-center space-y-10">
-              <div className="inline-flex flex-nowrap justify-center gap-3 text-xs font-bold text-secondary-500 uppercase tracking-wide bg-white/60 px-4 py-2 rounded-full border border-primary-100 whitespace-nowrap">
-                <span className="flex items-center gap-1"><Gift className="h-3 w-3" /> Cadeaux</span>
-                <span className="text-gray-300">•</span>
-                <span className="flex items-center gap-1"><Baby className="h-3 w-3" /> Maternité</span>
-                <span className="text-gray-300">•</span>
-                <span className="flex items-center gap-1"><Heart className="h-3 w-3" /> Soins</span>
-              </div>
-              <Link href="/produits" className="bg-primary-600 text-white px-8 py-3 rounded-full font-bold hover:bg-primary-700 transition-all shadow-lg shadow-primary-200 flex items-center gap-2 hover:-translate-y-1">
-                Voir le catalogue <ArrowRight className="h-4 w-4" />
-              </Link>
+              ))}
             </div>
-
-            {/* BLOC 3 : IMAGES HERO (allaitement) */}
-            {heroImages.length >= 2 && (
-              <div className="flex flex-1 gap-4 justify-center items-center mt-6 md:mt-0">
-                <Link href={`/produits/${heroImages[0].id}`} className="group/img relative w-40 md:w-52 aspect-3/4 mt-8 transform -rotate-2 hover:rotate-0 transition-all duration-500 block">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={heroImages[0].image_url} alt={heroImages[0].name} className="rounded-2xl shadow-xl object-cover w-full h-full border-4 border-white" />
-                  <button onClick={(e) => handleAddToCart(e, heroImages[0])} className="absolute top-3 left-3 bg-white/90 hover:bg-primary-600 text-primary-600 hover:text-white p-1.5 rounded-full shadow-md transition-all duration-200 active:scale-90 z-10">
-                    <ShoppingCart className="h-3 w-3" />
-                  </button>
-                  <div className="absolute inset-0 rounded-2xl bg-linear-to-t from-primary-900/55 via-primary-700/10 to-transparent flex items-end p-3">
-                    <div className="w-full">
-                      <span className="text-white text-xs font-bold leading-snug line-clamp-1 block">
-                        <span className="text-secondary-300">{heroImages[0].name.split(' ')[0]}</span>{' '}{heroImages[0].name.split(' ').slice(1).join(' ')}
-                      </span>
-                      <p className="text-white/90 text-[10px] leading-relaxed line-clamp-4 mt-1.5 pb-1 max-h-0 overflow-hidden group-hover/img:max-h-24 transition-all duration-300">{heroImages[0].description}</p>
-                    </div>
-                  </div>
-                </Link>
-                <Link href={`/produits/${heroImages[1].id}`} className="group/img relative w-40 md:w-52 aspect-3/4 mb-8 transform rotate-2 hover:rotate-0 transition-all duration-500 block">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={heroImages[1].image_url} alt={heroImages[1].name} className="rounded-2xl shadow-xl object-cover w-full h-full border-4 border-white" />
-                  <button onClick={(e) => handleAddToCart(e, heroImages[1])} className="absolute top-3 left-3 bg-white/90 hover:bg-primary-600 text-primary-600 hover:text-white p-1.5 rounded-full shadow-md transition-all duration-200 active:scale-90 z-10">
-                    <ShoppingCart className="h-3 w-3" />
-                  </button>
-                  <div className="absolute inset-0 rounded-2xl bg-linear-to-t from-primary-900/55 via-primary-700/10 to-transparent flex items-end p-3">
-                    <div className="w-full">
-                      <span className="text-white text-xs font-bold leading-snug line-clamp-1 block">
-                        <span className="text-secondary-300">{heroImages[1].name.split(' ')[0]}</span>{' '}{heroImages[1].name.split(' ').slice(1).join(' ')}
-                      </span>
-                      <p className="text-white/90 text-[10px] leading-relaxed line-clamp-4 mt-1.5 pb-1 max-h-0 overflow-hidden group-hover/img:max-h-24 transition-all duration-300">{heroImages[1].description}</p>
-                    </div>
-                  </div>
-                </Link>
-              </div>
-            )}
           </div>
-
-          {/* --- BORDURE BASSE ANIMÉE EN VERT --- */}
-          <div className="absolute bottom-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-primary-600/40 to-transparent animate-pulse" />
-        </section>
-      )}
+        )}
+      </section>
 
       {/* --- 3. BLOC PRODUITS --- */}
       <section className="py-8 bg-gray-50 min-h-screen">
