@@ -54,16 +54,13 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white w-full">
       {/* --- 1. HERO SECTION --- */}
-      <section className="relative bg-primary-50 overflow-hidden animate-in fade-in duration-700">
-        {/* Blobs décoratifs */}
-        <div className="absolute -top-10 left-[10%] w-72 h-72 bg-primary-300/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-10 right-[10%] w-64 h-64 bg-secondary-300/20 rounded-full blur-3xl pointer-events-none" />
+      <section className="relative bg-white overflow-hidden">
 
         {/* Défilement horizontal — 10 produits */}
         {heroScrollProducts.length > 0 && (
           <div className="relative">
-            <div className="absolute left-0 top-0 bottom-5 w-8 bg-linear-to-r from-primary-50 to-transparent z-20 pointer-events-none" />
-            <div className="absolute right-0 top-0 bottom-5 w-10 bg-linear-to-l from-primary-50 to-transparent z-20 pointer-events-none" />
+            <div className="absolute left-0 top-0 bottom-5 w-8 bg-linear-to-r from-white to-transparent z-20 pointer-events-none" />
+            <div className="absolute right-0 top-0 bottom-5 w-10 bg-linear-to-l from-white to-transparent z-20 pointer-events-none" />
 
             <div className="relative z-10 overflow-x-auto flex gap-4 px-5 md:px-10 pb-4 pt-4 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {heroScrollProducts.map((product) => (
@@ -84,10 +81,18 @@ export default function Home() {
                   >
                     <ShoppingCart className="h-3 w-3" />
                   </button>
-                  <div className="absolute inset-0 bg-linear-to-t from-primary-900/65 via-primary-700/10 to-transparent flex items-end p-3">
-                    <span className="text-white text-xs font-bold leading-snug line-clamp-2 block">
-                      <span className="text-secondary-300">{product.name.split(' ')[0]}</span>{' '}{product.name.split(' ').slice(1).join(' ')}
-                    </span>
+                  <div className="absolute inset-0 bg-linear-to-t from-primary-900/75 via-primary-700/20 to-transparent flex items-end p-3">
+                    <div className="w-full">
+                      <span className="text-white text-xs font-bold leading-snug line-clamp-1 block">
+                        <span className="text-secondary-300">{product.name.split(' ')[0]}</span>{' '}{product.name.split(' ').slice(1).join(' ')}
+                      </span>
+                      <p className="text-white/80 text-[10px] leading-relaxed mt-0.5 max-h-0 overflow-hidden group-hover/img:max-h-12 transition-all duration-300 line-clamp-2">
+                        {product.description || 'Un indispensable pour bébé.'}
+                      </p>
+                      <p className="text-secondary-300 text-[10px] font-bold mt-0.5 max-h-0 overflow-hidden group-hover/img:max-h-6 transition-all duration-300">
+                        {product.price.toLocaleString()} F
+                      </p>
+                    </div>
                   </div>
                 </Link>
               ))}
@@ -107,14 +112,14 @@ export default function Home() {
       </section>
 
       {/* --- 3. BLOC PRODUITS --- */}
-      <section className="py-8 bg-gray-50 min-h-screen">
+      <section className="py-8 min-h-screen bg-white">
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between mb-5">
             <Link
-              href="/produits"
+              href="/composer-ma-box"
               className="hidden md:flex items-center text-primary-500 font-bold hover:underline text-xs uppercase tracking-wide"
             >
-              Voir tout nos produits
+              Confectionner un panier cadeaux
             </Link>
 
             <Link
