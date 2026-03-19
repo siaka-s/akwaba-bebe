@@ -257,7 +257,7 @@ export default function ProductsPage() {
                       </span>
                       <button
                         onClick={(e) => handleAddToCart(e, product)}
-                        className="bg-gray-50 p-1.5 rounded-full text-gray-400 hover:bg-primary-600 hover:text-white transition-all shadow-sm active:scale-90"
+                        className="bg-primary-600 p-1.5 rounded-full text-white hover:bg-primary-700 transition-all shadow-sm active:scale-90"
                       >
                         <ShoppingCart className="h-3.5 w-3.5" />
                       </button>

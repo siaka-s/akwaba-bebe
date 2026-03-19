@@ -17,7 +17,7 @@ interface Product {
 }
 
 export default function Home() {
-  const [heroScrollProducts, setHeroScrollProducts] = useState<Product[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [maxPrice, setMaxPrice] = useState<number>(50000);
@@ -25,7 +25,7 @@ export default function Home() {
 
   const { addToCart } = useCart();
 
-  const filteredHeroProducts = heroScrollProducts.filter((p) => p.price <= maxPrice);
+  const filteredHeroProducts = allProducts.filter((p) => p.price <= maxPrice);
 
   useEffect(() => {
     fetch(`${API_URL}/products`)
@@ -34,9 +34,8 @@ export default function Home() {
         if (!data) return;
         const shuffle = (arr: Product[]) => [...arr].sort(() => Math.random() - 0.5);
         const shuffled = shuffle(data);
-        const hero = shuffled.slice(0, 10);
-        setHeroScrollProducts(hero);
-        setFeaturedProducts(shuffled.slice(10, 34));
+        setAllProducts(shuffled);
+        setFeaturedProducts(shuffled.slice(0, 24));
       })
       .catch((err) => console.error("Erreur fetch:", err))
       .finally(() => setLoading(false));
