@@ -190,11 +190,11 @@ export default function ProductsPage() {
       </div>
 
       {/* ── CONTENU ── */}
-      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 flex gap-6">
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 flex gap-6 items-start">
 
         {/* ── SIDEBAR DESKTOP ── */}
         <aside className="hidden lg:block w-56 shrink-0">
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sticky top-32">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sticky top-[140px]">
             <h3 className="text-xs font-black uppercase tracking-widest text-gray-500 mb-4 flex items-center gap-2">
               <Filter className="h-3.5 w-3.5" /> Catégories
             </h3>
@@ -268,16 +268,16 @@ export default function ProductsPage() {
                         </div>
                       )}
                     </div>
-                    <div className="px-3 pt-2.5 pb-1">
+                    <div className="px-3 pt-2.5 pb-0 flex flex-col gap-2">
                       <h3 className="text-[12px] font-semibold text-gray-800 leading-snug line-clamp-2 group-hover:text-primary-600 transition-colors h-[2.5em]">
                         {product.name}
                       </h3>
-                      <p className="text-[10px] text-gray-400 leading-relaxed line-clamp-1 mt-0.5 h-[1.25em]">
+                      <p className="text-[10px] text-gray-400 leading-snug line-clamp-2 h-[2.5em]">
                         {product.description || "Un indispensable pour bébé."}
                       </p>
                     </div>
                   </Link>
-                  <div className="px-3 pb-3 mt-auto flex items-center justify-between gap-2 pt-1.5 border-t border-gray-50">
+                  <div className="px-3 pb-3 mt-3 flex items-center justify-between gap-2 pt-2 border-t border-gray-100">
                     <div>
                       <span className="text-sm font-extrabold text-gray-900">{product.price.toLocaleString()}</span>
                       <span className="text-[10px] text-gray-400 ml-1">F CFA</span>
