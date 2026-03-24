@@ -98,7 +98,6 @@ export default function ProductsPage() {
   });
 
   const activeFiltersCount = (selectedCategory ? 1 : 0) + (selectedSubcategory ? 1 : 0) + (searchTerm ? 1 : 0);
-
   const categoryCount = (catId: number) => products.filter(p => p.category_id === catId).length;
 
   if (loading)
@@ -109,34 +108,32 @@ export default function ProductsPage() {
     );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="bg-white lg:h-[calc(100vh-73px)] lg:flex lg:flex-col">
+      <div className="max-w-screen-2xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-8 lg:flex lg:flex-col lg:flex-1 lg:overflow-hidden">
 
-      {/* ── BARRE SUPÉRIEURE ── */}
-      <div className="bg-white border-b border-gray-100 sticky top-0 z-30">
-        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-3">
-
-          {/* Recherche */}
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+        {/* ── RECHERCHE + TRI ── */}
+        <div className="flex items-center gap-3 mb-6 shrink-0">
+          <div className="flex-1 bg-gray-50 p-1 rounded-2xl flex items-center gap-3 border border-gray-100">
+            <Search className="h-5 w-5 text-gray-400 ml-2 shrink-0" />
             <input
               type="text"
               placeholder="Rechercher un produit..."
-              className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-300 focus:bg-white transition-all"
+              className="flex-1 bg-transparent outline-none text-gray-700 p-2 text-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
             {searchTerm && (
-              <button onClick={() => setSearchTerm("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                <X className="h-3.5 w-3.5" />
+              <button onClick={() => setSearchTerm("")} className="mr-2 text-gray-400 hover:text-gray-600">
+                <X className="h-4 w-4" />
               </button>
             )}
           </div>
 
           {/* Tri */}
-          <div className="relative hidden sm:block">
+          <div className="relative hidden sm:block shrink-0">
             <button
               onClick={() => setShowSort(!showSort)}
-              className="flex items-center gap-2 px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-600 hover:border-primary-300 transition-all"
+              className="flex items-center gap-2 px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl text-sm text-gray-600 hover:border-primary-300 transition-all whitespace-nowrap"
             >
               <SlidersHorizontal className="h-4 w-4" />
               <span className="hidden md:inline">{SORT_OPTIONS.find(o => o.value === sortBy)?.label}</span>
@@ -156,211 +153,142 @@ export default function ProductsPage() {
               </div>
             )}
           </div>
+        </div>
 
-          {/* Filtre mobile */}
+        <div className="flex flex-col lg:flex-row gap-8 lg:flex-1 lg:overflow-hidden pb-8">
+
+          {/* BOUTON FILTRE MOBILE */}
           <button
             onClick={() => setIsMobileMenuOpen(true)}
-            className="lg:hidden flex items-center gap-2 px-3.5 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-semibold relative"
+            className="lg:hidden flex items-center justify-center gap-2 bg-primary-600 text-white p-4 rounded-xl font-bold shadow-lg mb-6 relative"
           >
-            <Filter className="h-4 w-4" />
-            <span className="hidden sm:inline">Filtres</span>
+            <Filter className="h-5 w-5" /> Filtrer par catégorie
             {activeFiltersCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 bg-secondary-400 text-white text-[10px] font-bold w-4.5 h-4.5 rounded-full flex items-center justify-center">
+              <span className="absolute -top-2 -right-2 bg-secondary-400 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
                 {activeFiltersCount}
               </span>
             )}
           </button>
-        </div>
 
-        {/* Compteur résultats */}
-        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 pb-2.5 flex items-center gap-3">
-          <span className="text-xs text-gray-400">
-            <span className="font-bold text-gray-700">{filteredProducts.length}</span> produit{filteredProducts.length > 1 ? "s" : ""}
-            {searchTerm && <> pour <span className="italic">&quot;{searchTerm}&quot;</span></>}
-          </span>
-          {activeFiltersCount > 0 && (
-            <button
-              onClick={() => { setSelectedCategory(null); setSelectedSubcategory(null); setSearchTerm(""); }}
-              className="text-xs text-primary-600 hover:underline font-medium flex items-center gap-1"
-            >
-              <X className="h-3 w-3" /> Réinitialiser
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* ── CONTENU ── */}
-      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 flex gap-6 items-start">
-
-        {/* ── SIDEBAR DESKTOP ── */}
-        <aside className="hidden lg:block w-56 shrink-0">
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sticky top-[140px]">
-            <h3 className="text-xs font-black uppercase tracking-widest text-gray-500 mb-4 flex items-center gap-2">
-              <Filter className="h-3.5 w-3.5" /> Catégories
-            </h3>
-            <ul className="space-y-1">
-              <li>
-                <button
-                  onClick={() => setSelectedCategory(null)}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-between ${selectedCategory === null ? "bg-primary-600 text-white" : "text-gray-600 hover:bg-gray-50"}`}
-                >
-                  <span>Tous</span>
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${selectedCategory === null ? "bg-white/20 text-white" : "bg-gray-100 text-gray-500"}`}>
-                    {products.length}
-                  </span>
+          {/* ── SIDEBAR ── */}
+          <aside
+            className={`fixed inset-0 z-50 lg:relative lg:inset-auto lg:z-0 lg:w-64 shrink-0 ${isMobileMenuOpen ? "block" : "hidden lg:block"}`}
+          >
+            <div className="absolute inset-0 bg-black/50 lg:hidden" onClick={() => setIsMobileMenuOpen(false)} />
+            <div className="absolute right-0 top-0 bottom-0 w-72 bg-white p-6 lg:p-0 lg:bg-transparent lg:relative lg:w-full lg:block">
+              <div className="flex items-center justify-between lg:hidden mb-6">
+                <h3 className="font-bold text-xl">Filtres</h3>
+                <button onClick={() => setIsMobileMenuOpen(false)}>
+                  <X className="h-6 w-6" />
                 </button>
-              </li>
-              {categories.map((cat) => (
-                <li key={cat.id}>
-                  <button
-                    onClick={() => setSelectedCategory(selectedCategory === cat.id ? null : cat.id)}
-                    className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-between ${selectedCategory === cat.id ? "bg-primary-600 text-white" : "text-gray-600 hover:bg-gray-50"}`}
-                  >
-                    <span className="truncate pr-1">{cat.name}</span>
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full shrink-0 ${selectedCategory === cat.id ? "bg-white/20 text-white" : "bg-gray-100 text-gray-500"}`}>
-                      {categoryCount(cat.id)}
-                    </span>
-                  </button>
-                  {selectedCategory === cat.id && subcategories.length > 0 && (
-                    <ul className="mt-1 ml-3 pl-3 border-l-2 border-primary-100 space-y-0.5">
-                      {subcategories.map(sc => (
-                        <li key={sc.id}>
-                          <button
-                            onClick={() => setSelectedSubcategory(selectedSubcategory === sc.id ? null : sc.id)}
-                            className={`w-full text-left px-2 py-1.5 rounded-lg text-xs transition-all ${selectedSubcategory === sc.id ? "text-primary-700 font-bold bg-primary-50" : "text-gray-400 hover:text-gray-700 hover:bg-gray-50"}`}
-                          >
-                            {sc.name}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </aside>
+              </div>
 
-        {/* ── GRILLE PRODUITS ── */}
-        <div className="flex-1 min-w-0">
-          {filteredProducts.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-              {filteredProducts.map((product) => (
-                <div
-                  key={product.id}
-                  className="group bg-white rounded-xl overflow-hidden flex flex-col shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5"
-                >
-                  <Link href={`/produits/${product.id}`} className="block">
-                    <div className="relative overflow-hidden bg-gray-50" style={{ aspectRatio: "4/3" }}>
-                      <img
-                        src={product.image_url}
-                        alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                      {product.stock_quantity !== undefined && product.stock_quantity <= 3 && product.stock_quantity > 0 && (
-                        <span className="absolute top-2 left-2 bg-orange-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">
-                          Plus que {product.stock_quantity}
-                        </span>
-                      )}
-                      {product.stock_quantity === 0 && (
-                        <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
-                          <span className="bg-gray-800 text-white text-[10px] font-bold px-3 py-1 rounded-full">Épuisé</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="px-3 pt-2.5 pb-0 flex flex-col gap-2">
-                      <h3 className="text-[12px] font-semibold text-gray-800 leading-snug line-clamp-2 group-hover:text-primary-600 transition-colors h-[2.5em]">
-                        {product.name}
-                      </h3>
-                      <p className="text-[10px] text-gray-400 leading-snug line-clamp-2 h-[2.5em]">
-                        {product.description || "Un indispensable pour bébé."}
-                      </p>
-                    </div>
-                  </Link>
-                  <div className="px-3 pb-3 mt-3 flex items-center justify-between gap-2 pt-2 border-t border-gray-100">
-                    <div>
-                      <span className="text-sm font-extrabold text-gray-900">{product.price.toLocaleString()}</span>
-                      <span className="text-[10px] text-gray-400 ml-1">F CFA</span>
-                    </div>
+              <div className="bg-white lg:p-6 lg:rounded-2xl lg:border lg:border-gray-100 lg:shadow-sm sticky top-6">
+                <h3 className="font-black text-xs uppercase tracking-widest text-primary-900 mb-4 flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-primary-500" /> Catégories
+                </h3>
+                <ul className="space-y-1.5">
+                  <li>
                     <button
-                      onClick={(e) => handleAddToCart(e, product)}
-                      disabled={product.stock_quantity === 0}
-                      className="flex items-center gap-1.5 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-200 disabled:cursor-not-allowed text-white px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all active:scale-90 shrink-0"
+                      onClick={() => { setSelectedCategory(null); setIsMobileMenuOpen(false); }}
+                      className={`w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between ${selectedCategory === null ? "bg-primary-600 text-white shadow-md" : "text-gray-500 hover:bg-gray-50"}`}
                     >
-                      <ShoppingCart className="h-3 w-3" />
-                      <span className="hidden sm:inline">Ajouter</span>
+                      <span>Tous les produits</span>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${selectedCategory === null ? "bg-white/20" : "bg-gray-100 text-gray-400"}`}>{products.length}</span>
                     </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-24 text-center">
-              <PackageX className="h-14 w-14 text-gray-200 mb-4" />
-              <h3 className="text-lg font-bold text-gray-800">Aucun produit trouvé</h3>
-              <p className="text-gray-400 text-sm mt-1 mb-4">Essayez d&apos;autres mots-clés ou catégories.</p>
-              <button
-                onClick={() => { setSelectedCategory(null); setSelectedSubcategory(null); setSearchTerm(""); }}
-                className="text-sm text-primary-600 font-semibold hover:underline"
-              >
-                Réinitialiser les filtres
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
+                  </li>
+                  {categories.map((cat) => (
+                    <li key={cat.id}>
+                      <button
+                        onClick={() => { setSelectedCategory(cat.id); setIsMobileMenuOpen(false); }}
+                        className={`w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between ${selectedCategory === cat.id ? "bg-primary-600 text-white shadow-md" : "text-gray-500 hover:bg-gray-50"}`}
+                      >
+                        <span className="truncate pr-1">{cat.name}</span>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full shrink-0 ${selectedCategory === cat.id ? "bg-white/20" : "bg-gray-100 text-gray-400"}`}>{categoryCount(cat.id)}</span>
+                      </button>
+                      {selectedCategory === cat.id && subcategories.length > 0 && (
+                        <ul className="mt-1 ml-3 space-y-1 border-l-2 border-primary-100 pl-3">
+                          {subcategories.map(sc => (
+                            <li key={sc.id}>
+                              <button
+                                onClick={() => { setSelectedSubcategory(selectedSubcategory === sc.id ? null : sc.id); setIsMobileMenuOpen(false); }}
+                                className={`w-full text-left px-3 py-1.5 rounded-lg text-xs transition-all ${selectedSubcategory === sc.id ? "text-primary-700 font-bold bg-primary-50" : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"}`}
+                              >
+                                {sc.name}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </li>
+                  ))}
+                </ul>
 
-      {/* ── FILTRE MOBILE — PANEL ── */}
-      {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setIsMobileMenuOpen(false)} />
-          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl p-6 max-h-[75vh] overflow-y-auto animate-in slide-in-from-bottom duration-200">
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="text-base font-black text-gray-900 flex items-center gap-2">
-                <Filter className="h-4 w-4 text-primary-500" /> Catégories
-              </h3>
-              <button onClick={() => setIsMobileMenuOpen(false)} className="p-1.5 bg-gray-100 rounded-full">
-                <X className="h-4 w-4 text-gray-600" />
-              </button>
-            </div>
-
-            {/* Tri mobile */}
-            <div className="mb-5">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Trier par</p>
-              <div className="grid grid-cols-2 gap-2">
-                {SORT_OPTIONS.map(opt => (
+                {activeFiltersCount > 0 && (
                   <button
-                    key={opt.value}
-                    onClick={() => setSortBy(opt.value)}
-                    className={`py-2 px-3 rounded-xl text-xs font-semibold transition-all ${sortBy === opt.value ? "bg-primary-600 text-white" : "bg-gray-50 text-gray-600"}`}
+                    onClick={() => { setSelectedCategory(null); setSelectedSubcategory(null); setSearchTerm(""); }}
+                    className="mt-4 w-full text-xs text-gray-400 hover:text-primary-600 flex items-center justify-center gap-1 py-2 border border-dashed border-gray-200 rounded-xl transition-colors"
                   >
-                    {opt.label}
+                    <X className="h-3 w-3" /> Réinitialiser les filtres
                   </button>
-                ))}
+                )}
               </div>
             </div>
+          </aside>
 
-            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">Catégorie</p>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => { setSelectedCategory(null); setIsMobileMenuOpen(false); }}
-                className={`py-2.5 px-3 rounded-xl text-sm font-semibold transition-all ${selectedCategory === null ? "bg-primary-600 text-white" : "bg-gray-50 text-gray-600"}`}
-              >
-                Tous ({products.length})
-              </button>
-              {categories.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => { setSelectedCategory(cat.id); setIsMobileMenuOpen(false); }}
-                  className={`py-2.5 px-3 rounded-xl text-sm font-semibold transition-all text-left ${selectedCategory === cat.id ? "bg-primary-600 text-white" : "bg-gray-50 text-gray-600"}`}
-                >
-                  {cat.name} <span className="opacity-60 text-xs">({categoryCount(cat.id)})</span>
-                </button>
-              ))}
-            </div>
+          {/* ── GRILLE PRODUITS ── */}
+          <div className="flex-1 lg:overflow-y-auto lg:pr-1">
+            {filteredProducts.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-5">
+                {filteredProducts.map((product) => (
+                  <div
+                    key={product.id}
+                    className="group bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col h-full hover:-translate-y-1 border-none"
+                  >
+                    <Link href={`/produits/${product.id}`} className="grow">
+                      <div className="relative h-44 md:h-48 bg-white overflow-hidden">
+                        <img
+                          src={product.image_url}
+                          alt={product.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                      </div>
+                      <div className="px-3 pt-3 pb-2 relative z-10 bg-white flex flex-col gap-2">
+                        <h3 className="font-semibold text-gray-900 text-sm leading-snug tracking-tight truncate pr-2 group-hover:text-primary-600">
+                          {product.name}
+                        </h3>
+                        <p className="text-xs text-gray-500 leading-relaxed line-clamp-1 pr-2">
+                          {product.description || "Un indispensable pour bébé."}
+                        </p>
+                        <span className="text-xs font-medium text-primary-600 hover:text-primary-700 cursor-pointer">
+                          En savoir plus
+                        </span>
+                      </div>
+                    </Link>
+                    <div className="px-3 pb-3 mt-auto flex items-center justify-between pt-1 border-t border-gray-50 bg-white">
+                      <span className="font-bold text-gray-900 text-sm">
+                        {product.price.toLocaleString()} F
+                      </span>
+                      <button
+                        onClick={(e) => handleAddToCart(e, product)}
+                        className="bg-primary-600 p-1.5 rounded-full text-white hover:bg-primary-700 transition-all shadow-sm active:scale-90"
+                      >
+                        <ShoppingCart className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <PackageX className="h-16 w-16 text-gray-200 mb-4" />
+                <h3 className="text-xl font-bold text-gray-900">Aucun produit</h3>
+                <p className="text-gray-500 text-sm mt-1">Désolé, aucune correspondance trouvée.</p>
+              </div>
+            )}
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
