@@ -269,10 +269,10 @@ export default function ProductsPage() {
                       )}
                     </div>
                     <div className="px-3 pt-2.5 pb-1">
-                      <h3 className="text-[12px] font-semibold text-gray-800 leading-snug line-clamp-2 group-hover:text-primary-600 transition-colors min-h-[2.5em]">
+                      <h3 className="text-[12px] font-semibold text-gray-800 leading-snug line-clamp-2 group-hover:text-primary-600 transition-colors h-[2.5em]">
                         {product.name}
                       </h3>
-                      <p className="text-[10px] text-gray-400 leading-relaxed line-clamp-1 mt-0.5 hidden md:block">
+                      <p className="text-[10px] text-gray-400 leading-relaxed line-clamp-1 mt-0.5 h-[1.25em]">
                         {product.description || "Un indispensable pour bébé."}
                       </p>
                     </div>
