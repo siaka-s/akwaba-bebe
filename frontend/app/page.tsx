@@ -14,6 +14,7 @@ interface Product {
   price: number;
   image_url: string;
   category_id: number;
+  promotion_percent: number | null;
 }
 
 export default function Home() {
@@ -87,6 +88,11 @@ export default function Home() {
                     alt={product.name}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover/img:scale-110"
                   />
+                  {product.promotion_percent && (
+                    <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full z-10 shadow">
+                      -{product.promotion_percent}%
+                    </span>
+                  )}
                   <button
                     onClick={(e) => handleAddToCart(e, product)}
                     className="absolute top-2 right-2 bg-white/90 hover:bg-primary-600 text-primary-600 hover:text-white p-1.5 rounded-full shadow transition-all active:scale-90 z-10"
@@ -102,7 +108,9 @@ export default function Home() {
                         {product.description || 'Un indispensable pour bébé.'}
                       </p>
                       <p className="text-secondary-300 text-[10px] font-bold mt-0.5 max-h-0 overflow-hidden group-hover/img:max-h-6 transition-all duration-300">
-                        {product.price.toLocaleString()} F
+                        {product.promotion_percent
+                          ? <><span className="line-through opacity-60">{product.price.toLocaleString()}</span> {Math.round(product.price * (1 - product.promotion_percent / 100)).toLocaleString()} F</>
+                          : <>{product.price.toLocaleString()} F</>}
                       </p>
                     </div>
                   </div>
@@ -194,6 +202,11 @@ export default function Home() {
                         alt={product.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
+                      {product.promotion_percent && (
+                        <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow">
+                          -{product.promotion_percent}%
+                        </span>
+                      )}
                     </div>
                     <div className="px-3 pt-2.5 pb-1">
                       <h3 className="text-[12px] font-semibold text-gray-800 leading-snug line-clamp-2 group-hover:text-primary-600 transition-colors min-h-[2.5em]">
@@ -202,9 +215,16 @@ export default function Home() {
                     </div>
                   </Link>
                   <div className="px-3 pb-3 mt-auto flex items-center justify-between gap-2">
-                    <span className="text-sm font-extrabold text-gray-900">
-                      {product.price.toLocaleString()} <span className="text-[10px] font-normal text-gray-500">F CFA</span>
-                    </span>
+                    <div>
+                      {product.promotion_percent ? (
+                        <>
+                          <span className="text-[10px] text-gray-400 line-through block leading-none">{product.price.toLocaleString()} F</span>
+                          <span className="text-sm font-extrabold text-red-600">{Math.round(product.price * (1 - product.promotion_percent / 100)).toLocaleString()} <span className="text-[10px] font-normal">F CFA</span></span>
+                        </>
+                      ) : (
+                        <span className="text-sm font-extrabold text-gray-900">{product.price.toLocaleString()} <span className="text-[10px] font-normal text-gray-500">F CFA</span></span>
+                      )}
+                    </div>
                     <button
                       onClick={(e) => handleAddToCart(e, product)}
                       className="flex items-center gap-1 bg-primary-600 hover:bg-primary-700 text-white px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition-all active:scale-90 shrink-0"

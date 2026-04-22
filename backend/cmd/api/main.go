@@ -75,6 +75,22 @@ func main() {
 		}
 	}))
 
+	http.HandleFunc("/products/promotion/apply", enableCORS(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPatch {
+			middleware.IsAdmin(productHandler.ApplyPromotion)(w, r)
+		} else {
+			http.Error(w, "PATCH requis", http.StatusMethodNotAllowed)
+		}
+	}))
+
+	http.HandleFunc("/products/promotion/remove", enableCORS(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPatch {
+			middleware.IsAdmin(productHandler.RemovePromotion)(w, r)
+		} else {
+			http.Error(w, "PATCH requis", http.StatusMethodNotAllowed)
+		}
+	}))
+
 	http.HandleFunc("/products/", enableCORS(func(w http.ResponseWriter, r *http.Request) {
 		productHandlerDispatcher(w, r, productHandler)
 	}))

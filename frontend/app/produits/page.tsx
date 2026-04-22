@@ -16,6 +16,7 @@ interface Product {
   image_url: string;
   category_id: number;
   subcategory_id: number | null;
+  promotion_percent: number | null;
 }
 
 interface Category {
@@ -252,6 +253,11 @@ export default function ProductsPage() {
                           alt={product.name}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
+                        {product.promotion_percent && (
+                          <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow z-10">
+                            -{product.promotion_percent}%
+                          </span>
+                        )}
                       </div>
                       <div className="px-3 pt-3 pb-2 relative z-10 bg-white flex flex-col gap-2">
                         <h3 className="font-semibold text-gray-900 text-sm leading-snug tracking-tight truncate pr-2 group-hover:text-primary-600">
@@ -266,9 +272,16 @@ export default function ProductsPage() {
                       </div>
                     </Link>
                     <div className="px-3 pb-3 mt-auto flex items-center justify-between pt-1 border-t border-gray-50 bg-white">
-                      <span className="font-bold text-gray-900 text-sm">
-                        {product.price.toLocaleString()} F
-                      </span>
+                      <div>
+                        {product.promotion_percent ? (
+                          <>
+                            <span className="text-[10px] text-gray-400 line-through block leading-none">{product.price.toLocaleString()} F</span>
+                            <span className="font-bold text-red-600 text-sm">{Math.round(product.price * (1 - product.promotion_percent / 100)).toLocaleString()} F</span>
+                          </>
+                        ) : (
+                          <span className="font-bold text-gray-900 text-sm">{product.price.toLocaleString()} F</span>
+                        )}
+                      </div>
                       <button
                         onClick={(e) => handleAddToCart(e, product)}
                         className="bg-primary-600 p-1.5 rounded-full text-white hover:bg-primary-700 transition-all shadow-sm active:scale-90"

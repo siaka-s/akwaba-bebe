@@ -16,12 +16,10 @@ type ProductHandler struct {
 	DB *sql.DB
 }
 
-// RÉCUPÉRER TOUS LES PRODUITS (GET /products) ---
 func (h *ProductHandler) GetAllProducts(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// Sélection des champs essentiels
-	rows, err := h.DB.Query("SELECT id, name, description, price, stock_quantity, image_url, category_id, subcategory_id FROM products ORDER BY id ASC")
+	rows, err := h.DB.Query("SELECT id, name, description, price, stock_quantity, image_url, category_id, subcategory_id, promotion_percent FROM products ORDER BY id ASC")
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"message": "Erreur serveur BDD"})
@@ -29,11 +27,10 @@ func (h *ProductHandler) GetAllProducts(w http.ResponseWriter, r *http.Request) 
 	}
 	defer rows.Close()
 
-	// make() garantit [] au lieu de null si pas de produits
 	products := make([]models.Product, 0)
 	for rows.Next() {
 		var p models.Product
-		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.StockQuantity, &p.ImageURL, &p.CategoryID, &p.SubcategoryID); err != nil {
+		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.StockQuantity, &p.ImageURL, &p.CategoryID, &p.SubcategoryID, &p.PromotionPercent); err != nil {
 			continue
 		}
 		products = append(products, p)
@@ -42,11 +39,9 @@ func (h *ProductHandler) GetAllProducts(w http.ResponseWriter, r *http.Request) 
 	json.NewEncoder(w).Encode(products)
 }
 
-// RÉCUPÉRER UN SEUL PRODUIT (GET /products/{id})
 func (h *ProductHandler) GetProduct(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// Extraction propre de l'ID depuis l'URL
 	idStr := strings.TrimPrefix(r.URL.Path, "/products/")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -56,17 +51,14 @@ func (h *ProductHandler) GetProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var p models.Product
-	sqlStatement := `SELECT id, name, description, price, stock_quantity, image_url, category_id, subcategory_id FROM products WHERE id=$1`
-
-	row := h.DB.QueryRow(sqlStatement, id)
-	err = row.Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.StockQuantity, &p.ImageURL, &p.CategoryID, &p.SubcategoryID)
+	row := h.DB.QueryRow("SELECT id, name, description, price, stock_quantity, image_url, category_id, subcategory_id, promotion_percent FROM products WHERE id=$1", id)
+	err = row.Scan(&p.ID, &p.Name, &p.Description, &p.Price, &p.StockQuantity, &p.ImageURL, &p.CategoryID, &p.SubcategoryID, &p.PromotionPercent)
 
 	if err == sql.ErrNoRows {
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(map[string]string{"message": "Produit introuvable"})
 		return
 	} else if err != nil {
-		// Log interne pour le débogage — ne jamais exposer l'erreur SQL au client
 		fmt.Printf("Erreur BDD GetProduct id=%d : %v\n", id, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"message": "Erreur lors de la récupération du produit"})
@@ -76,7 +68,6 @@ func (h *ProductHandler) GetProduct(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(p)
 }
 
-// CRÉER UN PRODUIT (POST /products)
 func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	var p models.Product
@@ -87,13 +78,11 @@ func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sqlStatement := `
-        INSERT INTO products (name, description, price, stock_quantity, image_url, category_id, subcategory_id)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-        RETURNING id`
-
 	id := 0
-	err := h.DB.QueryRow(sqlStatement, p.Name, p.Description, p.Price, p.StockQuantity, p.ImageURL, p.CategoryID, p.SubcategoryID).Scan(&id)
+	err := h.DB.QueryRow(
+		`INSERT INTO products (name, description, price, stock_quantity, image_url, category_id, subcategory_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+		p.Name, p.Description, p.Price, p.StockQuantity, p.ImageURL, p.CategoryID, p.SubcategoryID,
+	).Scan(&id)
 	if err != nil {
 		fmt.Printf("Erreur BDD CreateProduct : %v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -105,7 +94,6 @@ func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{"id": id, "message": "Succès"})
 }
 
-// MODIFIER UN PRODUIT (PUT /products/{id})
 func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -124,12 +112,10 @@ func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	query := `
-        UPDATE products
-        SET name=$1, description=$2, price=$3, stock_quantity=$4, image_url=$5, category_id=$6, subcategory_id=$7
-        WHERE id=$8`
-
-	res, err := h.DB.Exec(query, p.Name, p.Description, p.Price, p.StockQuantity, p.ImageURL, p.CategoryID, p.SubcategoryID, id)
+	res, err := h.DB.Exec(
+		`UPDATE products SET name=$1, description=$2, price=$3, stock_quantity=$4, image_url=$5, category_id=$6, subcategory_id=$7 WHERE id=$8`,
+		p.Name, p.Description, p.Price, p.StockQuantity, p.ImageURL, p.CategoryID, p.SubcategoryID, id,
+	)
 	if err != nil {
 		fmt.Printf("Erreur BDD UpdateProduct id=%d : %v\n", id, err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -147,11 +133,9 @@ func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "Produit mis à jour avec succès"})
 }
 
-// SUPPRIMER UN PRODUIT (DELETE /products/{id})
 func (h *ProductHandler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// Nettoyage de l'URL pour gérer d'éventuels "/delete/" résiduels
 	path := r.URL.Path
 	if strings.Contains(path, "/delete/") {
 		path = strings.Replace(path, "/delete", "", 1)
@@ -175,14 +159,108 @@ func (h *ProductHandler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "Produit supprimé"})
 }
 
-// UPLOAD IMAGE VERS AWS S3 (POST /upload)
+// ApplyPromotion — PATCH /products/promotion/apply (admin)
+// Body : { "percent": 15.0, "product_ids": [1,2,3] }
+// OU    { "percent": 15.0, "category_id": 5 }
+func (h *ProductHandler) ApplyPromotion(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var body struct {
+		Percent    float64 `json:"percent"`
+		ProductIDs []int   `json:"product_ids"`
+		CategoryID *int    `json:"category_id"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.Percent <= 0 || body.Percent > 100 {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Données invalides (percent 1-100 requis)"})
+		return
+	}
+
+	var affected int64
+	var err error
+
+	if body.CategoryID != nil {
+		res, e := h.DB.Exec("UPDATE products SET promotion_percent=$1 WHERE category_id=$2", body.Percent, *body.CategoryID)
+		err = e
+		affected, _ = res.RowsAffected()
+	} else if len(body.ProductIDs) > 0 {
+		// Construit $1,$2,... pour IN
+		args := []interface{}{body.Percent}
+		placeholders := make([]string, len(body.ProductIDs))
+		for i, pid := range body.ProductIDs {
+			args = append(args, pid)
+			placeholders[i] = fmt.Sprintf("$%d", i+2)
+		}
+		query := fmt.Sprintf("UPDATE products SET promotion_percent=$1 WHERE id IN (%s)", strings.Join(placeholders, ","))
+		res, e := h.DB.Exec(query, args...)
+		err = e
+		affected, _ = res.RowsAffected()
+	} else {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"message": "product_ids ou category_id requis"})
+		return
+	}
+
+	if err != nil {
+		fmt.Printf("Erreur ApplyPromotion : %v\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Erreur BDD"})
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{"message": "Promotion appliquée", "affected": affected})
+}
+
+// RemovePromotion — PATCH /products/promotion/remove (admin)
+// Body : { "product_ids": [1,2,3] } OU { "category_id": 5 } OU {} pour tout retirer
+func (h *ProductHandler) RemovePromotion(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var body struct {
+		ProductIDs []int `json:"product_ids"`
+		CategoryID *int  `json:"category_id"`
+	}
+	json.NewDecoder(r.Body).Decode(&body)
+
+	var affected int64
+	var err error
+
+	if body.CategoryID != nil {
+		res, e := h.DB.Exec("UPDATE products SET promotion_percent=NULL WHERE category_id=$1", *body.CategoryID)
+		err = e
+		affected, _ = res.RowsAffected()
+	} else if len(body.ProductIDs) > 0 {
+		args := []interface{}{}
+		placeholders := make([]string, len(body.ProductIDs))
+		for i, pid := range body.ProductIDs {
+			args = append(args, pid)
+			placeholders[i] = fmt.Sprintf("$%d", i+1)
+		}
+		query := fmt.Sprintf("UPDATE products SET promotion_percent=NULL WHERE id IN (%s)", strings.Join(placeholders, ","))
+		res, e := h.DB.Exec(query, args...)
+		err = e
+		affected, _ = res.RowsAffected()
+	} else {
+		res, e := h.DB.Exec("UPDATE products SET promotion_percent=NULL")
+		err = e
+		affected, _ = res.RowsAffected()
+	}
+
+	if err != nil {
+		fmt.Printf("Erreur RemovePromotion : %v\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Erreur BDD"})
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{"message": "Promotion retirée", "affected": affected})
+}
+
 func (h *ProductHandler) UploadImage(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// Limiter la taille du fichier (10MB)
 	r.ParseMultipartForm(10 << 20)
 
-	// Récupérer le fichier depuis le champ "file" du formulaire
 	file, handler, err := r.FormFile("file")
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -191,7 +269,6 @@ func (h *ProductHandler) UploadImage(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	// Appel au service utilitaire S3
 	url, err := utils.UploadToS3(file, handler)
 	if err != nil {
 		fmt.Printf("Erreur S3 upload : %v\n", err)
@@ -200,8 +277,5 @@ func (h *ProductHandler) UploadImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Succès : renvoyer l'URL publique
-	json.NewEncoder(w).Encode(map[string]string{
-		"url": url,
-	})
+	json.NewEncoder(w).Encode(map[string]string{"url": url})
 }
